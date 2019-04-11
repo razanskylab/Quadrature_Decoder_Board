@@ -1,0 +1,1 @@
+closePort(portPointer);
