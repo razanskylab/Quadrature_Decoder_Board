@@ -112,7 +112,7 @@ classdef AbsoluteQuad < BaseHardwareClass
       % AQ.Wait_Done(); % NOTE don't wait here, teensy is restarting...
     end
 
-    function [] = Check_Connection(AQ)
+    function [success] = Check_Connection(AQ)
       AQ.PrintF('[AQ] Checking teensy connection');
       AQ.Write_Command(AQ.CHECK_CONNECTION);
       success = AQ.Wait_Done();
