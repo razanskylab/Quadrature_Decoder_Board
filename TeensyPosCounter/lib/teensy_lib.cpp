@@ -1,47 +1,5 @@
 #include "teensy_lib.h"
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-void update_counter() {
-  digitalWriteFast(HCTL_SEL_PIN, LOW); // select high bit
-  digitalWriteFast(HCTL_OE_PIN, LOW); // start read
-
-  WAIT_80_NS; // allow high bit to be stable
-  msb = GPIOD_PDIR & 0xFF; // read msb
-  digitalWriteFast(HCTL_SEL_PIN, HIGH); // select low bit
-  // get msb, write directly to counter, also turns uint to int...lots of magic here
-  // we do this after changing pin, as data now needs time to settle...
-  // ((uint8_t *)&counter)[1] = msb;
-  ((unsigned char *)&posCounter)[1] = msb;
-
-  WAIT_80_NS; // allow high bit to be stable
-  lsb = GPIOD_PDIR & 0xFF; // read lsb
-  // finish read out
-  digitalWriteFast(HCTL_OE_PIN, HIGH);
-  digitalWriteFast(HCTL_SEL_PIN, HIGH);
-  // might need to add delay here...
-
-  // get lsb, write directly to counter, also turns uint to int...lots of magic here
-  // ((uint8_t *)&counter)[0] = lsb;
-  ((unsigned char *)&posCounter)[0] = lsb;
-  // if (posCounter == minusOne)
-  //   Serial.println("OVERFLOW WARN!");
-}
-
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-void trigger_ch(uint8_t channel) {
-  trigPinState[channel] = !trigPinState[channel]; // invert, good old Urs trick ;-)
-  digitalWriteFast(TRIG_OUT[channel], trigPinState[channel]); // select high bit
-  triggerCounter[channel]++;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// reset counter chip values to zero
-void reset_hctl() {
-  digitalWriteFast(HCTL_RST_PIN, LOW); // start read
-  WAIT_20_NS;
-  digitalWriteFast(HCTL_RST_PIN, HIGH);
-}
-
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 void setup_io_pins() {
   for (uint8_t i=0; i<8; i++)
@@ -73,6 +31,48 @@ void setup_io_pins() {
   digitalWriteFast(RANGE_LED, LOW);
   digitalWriteFast(CALIB_LED, LOW);
   digitalWriteFast(TRIGGER_LED, LOW);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+void update_counter() {
+  digitalWriteFast(HCTL_SEL_PIN, LOW); // select high bit
+  digitalWriteFast(HCTL_OE_PIN, LOW); // start read
+
+  WAIT_100_NS; // allow high bit to be stable
+  msb = GPIOD_PDIR & 0xFF; // read msb
+  digitalWriteFast(HCTL_SEL_PIN, HIGH); // select low bit
+  // get msb, write directly to counter, also turns uint to int...lots of magic here
+  // we do this after changing pin, as data now needs time to settle...
+  // ((uint8_t *)&counter)[1] = msb;
+  ((unsigned char *)&posCounter)[1] = msb;
+
+  WAIT_100_NS; // allow high bit to be stable
+  lsb = GPIOD_PDIR & 0xFF; // read lsb
+  // finish read out
+  digitalWriteFast(HCTL_OE_PIN, HIGH);
+  digitalWriteFast(HCTL_SEL_PIN, HIGH);
+  // might need to add delay here...
+
+  // get lsb, write directly to counter, also turns uint to int...lots of magic here
+  // ((uint8_t *)&counter)[0] = lsb;
+  ((unsigned char *)&posCounter)[0] = lsb;
+  // if (posCounter == minusOne)
+  //   Serial.println("OVERFLOW WARN!");
+}
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+void trigger_ch(uint8_t channel) {
+  trigPinState[channel] = !trigPinState[channel]; // invert, good old Urs trick ;-)
+  digitalWriteFast(TRIG_OUT[channel], trigPinState[channel]); // select high bit
+  triggerCounter[channel]++;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// reset counter chip values to zero
+void reset_hctl() {
+  digitalWriteFast(HCTL_RST_PIN, LOW); // start read
+  WAIT_60_NS;
+  digitalWriteFast(HCTL_RST_PIN, HIGH);
 }
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -134,6 +134,14 @@ void record_calibration_data(){
 }
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+void init_calibration_data(){
+  for (uint16_t iData=0; iData<POS_DATA_ARRAY_SIZE; iData++)
+  {
+    posDataArray[iData] = 0;
+  }
+}
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 void send_calibration_data(){
   nBytesCalib = serial_read_16bit();
   posDataPtr = posDataArray; // reset pointer to the start
@@ -146,6 +154,12 @@ void send_calibration_data(){
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 void pos_based_triggering(){
+  uint16_t lastCount = 0;
+  uint16_t diffCount = 0;
+
+  init_calibration_data(); // set position to all zeros...we then fill part of it
+  uint16_t arrayPos = 0;
+
   lowRange = serial_read_16bit(); // get range min
   upRange = serial_read_16bit();  // get range max
   stepSize = serial_read_16bit();  // get range max
@@ -158,6 +172,9 @@ void pos_based_triggering(){
     bool inRange = (posCounter >= lowRange) && (posCounter <= upRange);
     if (inRange){ // we are in range again,
       trigger_ch(2); //send first trigger signal at border of ROI
+      if (arrayPos < POS_DATA_ARRAY_SIZE){
+        posDataArray[arrayPos++] = posCounter; // FIXME just for debugging
+      }
       lastCount = posCounter; // save last position
       digitalWriteFast(RANGE_LED, HIGH); // set the range led
     }
@@ -170,10 +187,12 @@ void pos_based_triggering(){
       update_counter();     // update current counter value (stored in posCounter)
       inRange = (posCounter >= lowRange) && (posCounter <= upRange);
       diffCount = abs(posCounter-lastCount);
-      if (diffCount>stepSize){
+      if (diffCount>=stepSize){
         trigger_ch(2);
+        if (arrayPos < POS_DATA_ARRAY_SIZE){
+          posDataArray[arrayPos++] = posCounter; // FIXME just for debugging
+        }
         lastCount = posCounter; // save last position
-        digitalWriteFast(TRIGGER_LED, trigPinState[2]); // select high bit}
       }
     }
 
@@ -194,6 +213,9 @@ void pos_based_triggering(){
   } // while triggering
   // send total trigger count over serial port to matlab
   serial_write_32bit(triggerCounter[2]);
+  serial_write_16bit(DONE); // send the "ok, we are done" command
+  send_calibration_data();
+  // serial_write_16bit(DONE); // send the "ok, we are done" command
   // enable trigger mode -> enter while loop
   // check every 500 ms if we still want to be in trigger mode
 }

@@ -6,11 +6,12 @@ function [byteAnswer,twoByteAnswer] = Wait_Data(AQ,timeOut)
   end
   t1 = tic;
   % wait for data to come in...
-  while(AQ.bytesAvailable<2);
+  while (AQ.bytesAvailable<2)
     if toc(t1) > timeOut
       AQ.Verbose_Warn('Teensy response timeout!\n');
       return;
     end
   end
   [byteAnswer,twoByteAnswer] = AQ.Read_Data();
+
 end

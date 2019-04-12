@@ -46,6 +46,7 @@ classdef AbsoluteQuad < BaseHardwareClass
     RESET_TEENSY = uint16(44);
     ENABLE_POS_TRIGGER = uint16(55);
     DISABLE_POS_TRIGGER = uint16(56);
+    CHECK_CONNECTION = uint16(98);
     DONE = uint16(99);
   end
 
@@ -109,6 +110,17 @@ classdef AbsoluteQuad < BaseHardwareClass
       AQ.Write_Command(AQ.RESET_TEENSY);
       pause(5); % give teensy time to restart...
       % AQ.Wait_Done(); % NOTE don't wait here, teensy is restarting...
+    end
+
+    function [] = Check_Connection(AQ)
+      AQ.PrintF('[AQ] Checking teensy connection');
+      AQ.Write_Command(AQ.CHECK_CONNECTION);
+      success = AQ.Wait_Done();
+      if success
+        AQ.VPrintF('...looking good!\n');
+      else
+        AQ.VPrintF('...teensy requires reset!\n');
+      end
     end
 
     function [] = Write_16Bit(AQ,data)

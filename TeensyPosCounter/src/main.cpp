@@ -5,7 +5,7 @@ void setup() {
   setup_io_pins();
 
   // PWM clock for HCTL
-  analogWriteFrequency( HCTL_CLOCK_PIN, HCTL_CLOCK_SIGNAL);
+  analogWriteFrequency(HCTL_CLOCK_PIN, HCTL_CLOCK_SIGNAL);
   analogWrite(HCTL_CLOCK_PIN, 128); // set to 50% duty cycle
 
   Serial.begin(9600);
@@ -68,6 +68,11 @@ void loop()
       // -----------------------------------------------------------------------
       case RESET_HCTL_COUNTER:
         reset_hctl();
+        serial_write_16bit(DONE); // send the "ok, we are done" command
+        currentCommand = DO_NOTHING; // exit state machine
+        break;
+
+      case CHECK_CONNECTION:
         serial_write_16bit(DONE); // send the "ok, we are done" command
         currentCommand = DO_NOTHING; // exit state machine
         break;

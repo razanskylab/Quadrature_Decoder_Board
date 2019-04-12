@@ -20,6 +20,7 @@ void serial_wait_next_command();
 void pos_based_triggering();
 void record_calibration_data();
 void send_calibration_data();
+void init_calibration_data();
 
 
 // define global variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,8 +35,6 @@ uint8_t lsb = 0;
 uint16_t posCounter = 0; // position value stored in HCTL counter
 bool trigPinState[3] = {0,0,0}; // trigger pin is toggled on/off every "stepSize"
 uint32_t triggerCounter[3] = {0,0,0};
-uint16_t lastCount = 0;
-uint16_t diffCount = 0;
 
 bool firstTrig = true;
 bool doTrigger = false;
@@ -48,6 +47,7 @@ uint32_t lastCommandCheck;
 // constants for read/write during the calibration step
 #define POS_DATA_ARRAY_SIZE 2048 // hard limit is approx. 120k data points
 #define MAX_BYTE_PER_READ 4096
+#define MEGA 1000000L
 
 // stage calibration variables
 uint16_t currentCommand = 0; // for incoming serial data
@@ -69,6 +69,7 @@ const uint8_t MICRON = 5; // one micron = 5 steps
 #define WAIT_40_NS WAIT_20_NS; WAIT_20_NS;
 #define WAIT_60_NS WAIT_20_NS; WAIT_20_NS; WAIT_20_NS;
 #define WAIT_80_NS WAIT_40_NS; WAIT_40_NS;
+#define WAIT_100_NS WAIT_80_NS; WAIT_20_NS;
 
 // define commands
 #define DO_NOTHING 0
@@ -79,10 +80,11 @@ const uint8_t MICRON = 5; // one micron = 5 steps
 #define RESET_TEENSY 44
 #define ENABLE_POS_TRIGGER 55
 #define DISABLE_POS_TRIGGER 56
+#define CHECK_CONNECTION 98
 #define DONE 99
 
 // HCTL related constants
-const uint32_t HCTL_CLOCK_SIGNAL = 1000000*5;
+const uint32_t HCTL_CLOCK_SIGNAL = MEGA*40; // DO NOT CHANGE!!!
 const uint8_t pinTable[] = {2,14,7,8,6,20,21,5};
 
 // position related con

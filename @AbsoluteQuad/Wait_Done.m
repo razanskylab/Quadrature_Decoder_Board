@@ -1,7 +1,8 @@
 % function [] = Wait_Done(AQ)
 % Johannes Rebling, (johannesrebling@gmail.com), 2019
 
-function [] = Wait_Done(AQ,timeOut)
+function [success] = Wait_Done(AQ,timeOut)
+  success = false;
   if nargin == 1
     timeOut = 3; % 1 seconds default timeout
   end
@@ -17,7 +18,7 @@ function [] = Wait_Done(AQ,timeOut)
   [~,answer] = AQ.Read_Data();
   if answer ~= AQ.DONE
     error('[AQ] Something went wrong in the teensy!');
+  else
+    success = true;
   end
-  % AQ.Done(t1);
-
 end
