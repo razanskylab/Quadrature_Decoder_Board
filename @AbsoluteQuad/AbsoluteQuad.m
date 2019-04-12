@@ -59,11 +59,15 @@ classdef AbsoluteQuad < BaseHardwareClass
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods
     % constructor, called when class is created
-    function AQ = AbsoluteQuad()
-      if AQ.DO_AUTO_CONNECT && ~AQ.isConnected
+    function AQ = AbsoluteQuad(doConnect)
+      if nargin < 1
+        doConnect = AQ.DO_AUTO_CONNECT;
+      end
+
+      if doConnect && ~AQ.isConnected
         AQ.Connect;
-      elseif ~AQ.DO_AUTO_CONNECT && ~AQ.isConnected
-        AQ.VPrintF('[AQ] AbsoluteQuad not connected yet!');
+      elseif ~AQ.isConnected
+        AQ.VPrintF('[AQ] Initialized but not connected yet.\n');
       end
     end
 
