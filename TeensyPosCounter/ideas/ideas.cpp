@@ -62,7 +62,7 @@ void update_counter() {
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 void trigger_ch(uint8_t channel) {
   trigPinState[channel] = !trigPinState[channel]; // invert, good old Urs trick ;-)
-  digitalWriteFast(TRIG_OUT[channel], trigPinState[channel]);
+  digitalWriteFast(TRIG_OUT[channel], trigPinState[channel]); // select high bit
   triggerCounter[channel]++;
 }
 
@@ -153,51 +153,61 @@ void send_calibration_data(){
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 void pos_based_triggering(){
+  uint16_t lastCount = 0;
   uint16_t diffCount = 0;
 
   init_calibration_data(); // set position to all zeros...we then fill part of it
   uint16_t arrayPos = 0;
-  uint16_t lowRange = serial_read_16bit(); // low lim to start triggering
-  uint16_t upRange = serial_read_16bit();  // get range max
-  uint16_t stepSize = serial_read_16bit();  // get range max
 
-  // get currentTriggers? -> no need, just calc here...
-  uint16_t targetTrigger = (upRange-lowRange)/stepSize+1;
-  uint16_t currentTrigger = targetTrigger; // don't init to zero or we trigger before we start moving
-  uint16_t lastCount = 0;
+  lowRange = serial_read_16bit(); // get range min
+  upRange = serial_read_16bit();  // get range max
+  stepSize = serial_read_16bit();  // get range max
+  // get nTriggers?
   doTrigger = true;
-  bool inRange = 0;
   triggerCounter[2] = 0; // trigger counter for channel 2
+  bool inRange = 0;
+  uint16_t range = upRange - lowRange;
 
   while(doTrigger)
   {
     update_counter();     // update current counter value (stored in posCounter)
+
+    // UH: ich glaube da geht auch ein bitwise &
     inRange = (posCounter >= lowRange) && (posCounter <= upRange);
+
     if (inRange){ // we are in range again,
       trigger_ch(2); //send first trigger signal at border of ROI
-      currentTrigger = 1; // reset trigger counter
+      // if (arrayPos < POS_DATA_ARRAY_SIZE){
+      //   posDataArray[arrayPos++] = posCounter; // FIXME just for debugging
+      // }
       lastCount = posCounter; // save last position
+      // digitalWriteFast(RANGE_LED, HIGH); // set the range led
     }
-    // inRange = (posCounter >= lowRange) && (posCounter <= upRange);
-    while(inRange)
+    // else{
+    //   digitalWriteFast(RANGE_LED, LOW);
+    // }
+
+    while((posCounter >= lowRange) && (posCounter <= upRange))
     {
+      // check if still in range
       update_counter(); // update current counter value (stored in posCounter)
-      uint16_t counterDiff = abs(posCounter - lastCount);
-      if (counterDiff >= stepSize){
+      // inRange = (posCounter >= lowRange) && (posCounter <= upRange);
+      // inRange = ((posCounter - lowRange) < (upRange - lowCounter));
+
+      // abs can be improved using bitshifting
+      // inline int32 Abs(int32 x)
+      // {
+      //     int32 a = x >> 31;
+      //     return ((x ^ a) - a);
+      // }
+
+      if (abs(posCounter - lastCount) >= stepSize){
         trigger_ch(2);
-        currentTrigger++;
-        lastCount = posCounter; // save last position
         // if (arrayPos < POS_DATA_ARRAY_SIZE){
         //   posDataArray[arrayPos++] = posCounter; // FIXME just for debugging
         // }
+        lastCount = posCounter; // save last position
       }
-      // check if still in range
-      inRange = (posCounter >= lowRange) && (posCounter <= upRange);
-    }
-    // // // // we have left the range, make sure we triggered enough...
-    if (currentTrigger < targetTrigger){
-      trigger_ch(2);
-      currentTrigger++;
     }
 
     // check if we got a new serial command to stop triggering

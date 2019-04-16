@@ -38,8 +38,6 @@ uint32_t triggerCounter[3] = {0,0,0};
 
 bool firstTrig = true;
 bool doTrigger = false;
-uint16_t lowRange; // low lim to start triggering
-uint16_t upRange; // high lim to stop triggering
   // we trigger between these two limits
 uint16_t stepSize; // trigger every nSteps
 uint32_t lastCommandCheck;
@@ -65,6 +63,7 @@ const uint8_t MICRON = 5; // one micron = 5 steps
 
 // wait a few clock cycles
 #define NOP __asm__ __volatile__ ("nop\n\t") // ~6 ns = one clock cycle
+#define WAIT_10_NS NOP; NOP;
 #define WAIT_20_NS NOP; NOP; NOP; NOP;
 #define WAIT_40_NS WAIT_20_NS; WAIT_20_NS;
 #define WAIT_60_NS WAIT_20_NS; WAIT_20_NS; WAIT_20_NS;

@@ -15,6 +15,8 @@ classdef AbsoluteQuad < BaseHardwareClass
     bytesAvailable(1,1) {mustBeNumeric}; % [counts] current stage position, read from quad encoder
     nTriggers(1,1) {mustBeNumeric};
       % expected number of triggers, based on trigger range and step size
+    trigRangeCounts(1,2) {mustBeInteger,mustBeNonnegative,mustBeFinite}; % [pos counter pos.]
+    trigStepSizeCounts(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite}; % [pos counter steps]
   end
 
   % things we don't want to accidently change but that still might be interesting
@@ -170,6 +172,17 @@ classdef AbsoluteQuad < BaseHardwareClass
       distance = AQ.trigRange(2) - AQ.trigRange(1);
       minTrigger = ceil(distance./(AQ.trigStepSize*1e-3));
       nTriggers = minTrigger + 1;
+    end
+
+    function [trigRangeCounts] = get.trigRangeCounts(AQ)
+      lowTrigRangeCnt = AQ.MM_To_Steps(AQ.trigRange(1));
+      highTrigRangeCnt = AQ.MM_To_Steps(AQ.trigRange(2));
+      trigRangeCounts(1) = lowTrigRangeCnt;
+      trigRangeCounts(2) = highTrigRangeCnt;
+    end
+
+    function [trigStepSizeCounts] = get.trigStepSizeCounts(AQ)
+      trigStepSizeCounts = AQ.MM_To_Steps(AQ.trigStepSize*1e-3);
     end
 
   end % <<<<<<<< END SET?GET METHODS
