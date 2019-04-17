@@ -20,7 +20,7 @@ classdef AbsoluteQuad < BaseHardwareClass
   end
 
   % things we don't want to accidently change but that still might be interesting
-  properties (SetAccess = private)
+  properties (SetAccess = private, Transient = true)
     serialPtr = []; % pointer to serial port (we are using MEX Serial instead)
     isConnected = false;
     samplingFreq; % sampling frequency in HZ
@@ -84,8 +84,8 @@ classdef AbsoluteQuad < BaseHardwareClass
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % when saved, hand over only properties stored in saveObj
     function SaveObj = saveobj(AQ)
-      SaveObj = AQ; % just copy/save all for now
-     end
+      SaveObj = AQ; % see class def for info
+    end
   end
 
 
@@ -146,15 +146,17 @@ classdef AbsoluteQuad < BaseHardwareClass
   methods % set / get methods
     % --------------------------------------------------------------------------
     function [pos] = get.pos(AQ)
-      % pos = AQ.Dev.get('pos');
-      % pos = AQ.Steps_To_MM(pos); % convert to steps
-      pos = AQ.Steps_To_MM(AQ.posCount);
+      pos = AQ.Steps_To_MM(AQ.posCount);A
     end
 
     function [posCount] = get.posCount(AQ)
-      AQ.Write_Command(AQ.SEND_CURRENT_POS);
-      [~,posCount] = AQ.Wait_Data();
-      posCount = double(posCount);
+      if AQ.isConnected
+        AQ.Write_Command(AQ.SEND_CURRENT_POS);
+        [~,posCount] = AQ.Wait_Data();
+        posCount = double(posCount);
+      else
+        posCount = [];
+      end
       % posCount = AQ.Dev.get('posCount');
       % posCount = AQ.Steps_To_MM(posCount); % convert to steps
     end
@@ -164,8 +166,12 @@ classdef AbsoluteQuad < BaseHardwareClass
     end
 
     function [bytesAvailable] = get.bytesAvailable(AQ)
-      numBytesToRead = 0;
-      [~ , bytesAvailable] = readPort(AQ.serialPtr, numBytesToRead);
+      if AQ.isConnected
+        numBytesToRead = 0;
+        [~ , bytesAvailable] = readPort(AQ.serialPtr, numBytesToRead);
+      else
+        bytesAvailable = [];
+      end
     end
 
     function [nTriggers] = get.nTriggers(AQ)
