@@ -26,7 +26,6 @@ void init_calibration_data();
 // define global variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 bool calibLedState = 0; // trigger pin is toggled on/off every "stepSize"
 
-
 // used for HCTL communication
 uint8_t msb = 0;
 uint8_t lsb = 0;
@@ -35,12 +34,6 @@ uint8_t lsb = 0;
 uint16_t posCounter = 0; // position value stored in HCTL counter
 bool trigPinState[3] = {0,0,0}; // trigger pin is toggled on/off every "stepSize"
 uint32_t triggerCounter[3] = {0,0,0};
-
-bool firstTrig = true;
-bool doTrigger = false;
-  // we trigger between these two limits
-uint16_t stepSize; // trigger every nSteps
-uint32_t lastCommandCheck;
 
 // constants for read/write during the calibration step
 #define POS_DATA_ARRAY_SIZE 2048 // hard limit is approx. 120k data points
@@ -79,6 +72,7 @@ const uint8_t MICRON = 5; // one micron = 5 steps
 #define RESET_TEENSY 44
 #define ENABLE_POS_TRIGGER 55
 #define DISABLE_POS_TRIGGER 56
+#define SCOPE_MODE 66
 #define CHECK_CONNECTION 98
 #define DONE 99
 

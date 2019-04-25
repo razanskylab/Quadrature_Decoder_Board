@@ -155,7 +155,6 @@ void send_calibration_data(){
 void pos_based_triggering(){
   uint16_t diffCount = 0;
 
-  init_calibration_data(); // set position to all zeros...we then fill part of it
   uint16_t arrayPos = 0;
   uint16_t lowRange = serial_read_16bit(); // low lim to start triggering
   uint16_t upRange = serial_read_16bit();  // get range max
@@ -165,8 +164,9 @@ void pos_based_triggering(){
   uint16_t targetTrigger = (upRange-lowRange)/stepSize+1;
   uint16_t currentTrigger = targetTrigger; // don't init to zero or we trigger before we start moving
   uint16_t lastCount = 0;
-  doTrigger = true;
+  bool doTrigger = true;
   bool inRange = 0;
+  uint32_t lastCommandCheck;
   triggerCounter[2] = 0; // trigger counter for channel 2
 
   while(doTrigger)
@@ -178,7 +178,6 @@ void pos_based_triggering(){
       currentTrigger = 1; // reset trigger counter
       lastCount = posCounter; // save last position
     }
-    // inRange = (posCounter >= lowRange) && (posCounter <= upRange);
     while(inRange)
     {
       update_counter(); // update current counter value (stored in posCounter)
@@ -187,14 +186,11 @@ void pos_based_triggering(){
         trigger_ch(2);
         currentTrigger++;
         lastCount = posCounter; // save last position
-        // if (arrayPos < POS_DATA_ARRAY_SIZE){
-        //   posDataArray[arrayPos++] = posCounter; // FIXME just for debugging
-        // }
       }
       // check if still in range
       inRange = (posCounter >= lowRange) && (posCounter <= upRange);
     }
-    // // // // we have left the range, make sure we triggered enough...
+    // we have left the range, make sure we triggered enough...
     if (currentTrigger < targetTrigger){
       trigger_ch(2);
       currentTrigger++;
@@ -218,8 +214,4 @@ void pos_based_triggering(){
   // send total trigger count over serial port to matlab
   serial_write_32bit(triggerCounter[2]);
   serial_write_16bit(DONE); // send the "ok, we are done" command
-  send_calibration_data();
-  // serial_write_16bit(DONE); // send the "ok, we are done" command
-  // enable trigger mode -> enter while loop
-  // check every 500 ms if we still want to be in trigger mode
 }

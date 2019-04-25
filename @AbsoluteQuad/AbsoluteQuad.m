@@ -48,6 +48,7 @@ classdef AbsoluteQuad < BaseHardwareClass
     RESET_TEENSY = uint16(44);
     ENABLE_POS_TRIGGER = uint16(55);
     DISABLE_POS_TRIGGER = uint16(56);
+    SCOPE_MODE = uint16(66); % TODO needs to be implemented!
     CHECK_CONNECTION = uint16(98);
     DONE = uint16(99);
   end
