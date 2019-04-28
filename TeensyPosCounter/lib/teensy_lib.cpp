@@ -84,7 +84,7 @@ uint16_t serial_read_16bit()
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 uint16_t serial_read_16bit_no_wait()
 {
-  // same as serial_read_16bit but not checking for available bytes \
+  // same as serial_read_16bit but not checking for available bytes
   // used only where speed is critical
   return Serial.read() + (Serial.read() << 8);  // read a 16-bit number from 2 bytes
 }
@@ -153,9 +153,6 @@ void send_calibration_data(){
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 void pos_based_triggering(){
-  uint16_t diffCount = 0;
-
-  uint16_t arrayPos = 0;
   uint16_t lowRange = serial_read_16bit(); // low lim to start triggering
   uint16_t upRange = serial_read_16bit();  // get range max
   uint16_t stepSize = serial_read_16bit();  // get range max
@@ -166,8 +163,10 @@ void pos_based_triggering(){
   uint16_t lastCount = 0;
   bool doTrigger = true;
   bool inRange = 0;
-  uint32_t lastCommandCheck;
+  uint32_t lastCommandCheck = 0;
   triggerCounter[2] = 0; // trigger counter for channel 2
+
+  digitalWriteFast(TRIGGER_LED, HIGH);
 
   while(doTrigger)
   {
@@ -211,7 +210,55 @@ void pos_based_triggering(){
       }
     }
   } // while triggering
+  digitalWriteFast(TRIGGER_LED, LOW);
+
   // send total trigger count over serial port to matlab
   serial_write_32bit(triggerCounter[2]);
   serial_write_16bit(DONE); // send the "ok, we are done" command
+}
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+void scope_mode(){
+  uint16_t slowMode = serial_read_16bit(); // delay in ms or us
+  uint16_t triggerPeriod = serial_read_16bit();
+  uint16_t nTrigger = serial_read_16bit(); // trigger how many times?
+  uint32_t lastCommandCheck = 0;
+  triggerCounter[2] = 0; // trigger counter for channel 2
+  bool doTrigger = true;
+  digitalWriteFast(TRIGGER_LED, HIGH);
+
+  while (doTrigger){
+    // wait for next trigger point, we do this at least once!
+    if (slowMode){
+      while((millis()-lastSamplingTime)<triggerPeriod){};
+      lastSamplingTime = millis();
+    }
+    else{
+      while((micros()-lastSamplingTime)<triggerPeriod){};
+      lastSamplingTime = micros();
+    }
+    trigger_ch(2); // triggers 2nd board, which then triggers different things...
+
+    // if nTrigger = 0 we trigger indefinately
+    if (nTrigger && (triggerCounter[2] >= nTrigger)){
+      doTrigger = false;
+    }
+
+    // check if we got a new serial command to stop triggering
+    // COMMAND_CHECK_INTERVALL is high, so we only check once in a while
+    if((millis()-lastCommandCheck)>=COMMAND_CHECK_INTERVALL)
+    {
+      lastCommandCheck = millis();
+      if (Serial.available() >= 2)
+      {
+        currentCommand = serial_read_16bit_no_wait();
+        if (currentCommand == DISABLE_SCOPE)
+        {
+          doTrigger = false;
+        }
+      }
+    }
+  }
+  serial_write_32bit(triggerCounter[2]);
+  digitalWriteFast(TRIGGER_LED, LOW);
 }

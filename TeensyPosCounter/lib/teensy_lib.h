@@ -21,7 +21,7 @@ void pos_based_triggering();
 void record_calibration_data();
 void send_calibration_data();
 void init_calibration_data();
-
+void scope_mode();
 
 // define global variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 bool calibLedState = 0; // trigger pin is toggled on/off every "stepSize"
@@ -72,7 +72,8 @@ const uint8_t MICRON = 5; // one micron = 5 steps
 #define RESET_TEENSY 44
 #define ENABLE_POS_TRIGGER 55
 #define DISABLE_POS_TRIGGER 56
-#define SCOPE_MODE 66
+#define ENABLE_SCOPE_MODE 66
+#define DISABLE_SCOPE 67
 #define CHECK_CONNECTION 98
 #define DONE 99
 
