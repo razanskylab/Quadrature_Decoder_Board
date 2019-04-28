@@ -11,7 +11,7 @@ function [] = Enable_Scope_Mode(AQ,nTrigger)
 
   triggerPeriod = uint16(AQ.samplingPeriod);
   nTrigger = uint16(nTrigger);
-  slowMode = uint16(AQ.slowSampling)
+  slowMode = uint16(AQ.slowSampling);
 
   if (nTrigger == 0)
     AQ.PrintF('[AQ] Enabling free-running trigger @ %2.2fkHz.\n',AQ.samplingFreq*1e-3);
