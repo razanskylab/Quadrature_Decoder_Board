@@ -6,6 +6,7 @@ classdef AbsoluteQuad < BaseHardwareClass
     samplingFreq(1,1) {mustBeNumeric,mustBeNonnegative,mustBeFinite} = 100;
     trigRange(1,2) {mustBeNumeric,mustBeNonnegative,mustBeFinite}; % [mm]
     trigStepSize(1,1) {mustBeNumeric,mustBeNonnegative,mustBeFinite}; % [um]
+    nTotalBScans(1,1) {mustBeNumeric,mustBeNonnegative,mustBeFinite}; % [um]
   end
 
   % depended properties are calculated from other properties
@@ -27,7 +28,6 @@ classdef AbsoluteQuad < BaseHardwareClass
     serialPtr = []; % pointer to serial port (we are using MEX Serial instead)
     isConnected = false;
     lastTrigCount(1,1) {mustBeNumeric,mustBeNonnegative,mustBeFinite};
-
   end
 
   % things we don't want to accidently change but that still might be interesting

@@ -156,58 +156,101 @@ void pos_based_triggering(){
   uint16_t lowRange = serial_read_16bit(); // low lim to start triggering
   uint16_t upRange = serial_read_16bit();  // get range max
   uint16_t stepSize = serial_read_16bit();  // get range max
-  uint16_t nTotalBscans = serial_read_16bit();  // get nBscans
-  uint16_t nBScans = 0;  // get nBscans
 
   // get currentTriggers? -> no need, just calc here...
+  uint16_t targetTrigger = (upRange-lowRange)/stepSize+1;
+  uint16_t currentTrigger = targetTrigger; // don't init to zero or we trigger before we start moving
+  uint16_t lastCount = 0;
+  bool doTrigger = true;
+  bool inRange = 0;
+  uint32_t lastCommandCheck = 0;
   triggerCounter[2] = 0; // trigger counter for channel 2
-  uint8_t upwardsMoving = true;
+  uint16_t counterDiff = 0;
+
+  init_calibration_data(); // set position to all zeros...we then fill part of it
+  uint16_t arrayPos = 0;
+
+  // TESTING
   uint16_t nextTriggerPos = lowRange;
+  uint8_t upwardsMoving = true;
+  uint8_t nearRange = false;
+  uint8_t doneTriggering = false;
+  uint16_t nearLowRange = lowRange - stepSize;
+  uint16_t nearUpRange = upRange + stepSize;
+
 
   digitalWriteFast(TRIGGER_LED, HIGH);
 
-  while(nBScans < nTotalBscans)
+  while(doTrigger)
   {
     update_counter();     // update current counter value (stored in posCounter)
-    // we loop here until we leave the upwards moving trigger range
-    while(upwardsMoving){
-      update_counter();     // update current counter value (stored in posCounter)
-      if (posCounter >= nextTriggerPos){
-        trigger_ch(2);
-        nextTriggerPos = nextTriggerPos + stepSize;
+
+    // entered range
+    nearRange = (posCounter >= nearLowRange) && (posCounter <= nearUpRange);
+    currentTrigger = 1; // reset trigger counter
+    while (nearRange){
+      update_counter(); // update current counter value (stored in posCounter)
+      doneTriggering = currentTrigger > targetTrigger;
+      if (!doneTriggering){
+        if (upwardsMoving && (posCounter >= nextTriggerPos)) {
+          trigger_ch(2);
+          currentTrigger++;
+          nextTriggerPos = nextTriggerPos + stepSize;
+          if (arrayPos < POS_DATA_ARRAY_SIZE){
+            posDataArray[arrayPos++] = nextTriggerPos; // FIXME just for debugging
+            posDataArray[arrayPos++] = 1; // FIXME just for debugging
+          }
+        }
+        else if (!upwardsMoving && (posCounter <= nextTriggerPos)){
+          trigger_ch(2);
+          currentTrigger++;
+          nextTriggerPos = nextTriggerPos - stepSize;
+          if (arrayPos < POS_DATA_ARRAY_SIZE){
+            posDataArray[arrayPos++] = nextTriggerPos; // FIXME just for debugging
+            posDataArray[arrayPos++] = 2; // FIXME just for debugging
+          }
+        }
       }
-      if (nextTriggerPos > upRange){
-        upwardsMoving = false;
-        nextTriggerPos = upRange;
-        nBScans++;
+
+      nearRange = (posCounter >= nearLowRange) && (posCounter <= nearUpRange);
+      if (!nearRange){
+        // we are going to leave the range now, change movement direction
+        if (upwardsMoving){
+          // now we will move downwards
+          upwardsMoving = false;
+          nextTriggerPos = upRange;
+        }
+        else{
+          upwardsMoving = true;
+          nextTriggerPos = lowRange;
+        }
       }
     }
-    while(posCounter < (upRange + 2*stepSize)){
-      update_counter();     // update current counter value (stored in posCounter)
-    }; // leave range fully...
 
-    while(!upwardsMoving){
-      update_counter();     // update current counter value (stored in posCounter)
-      if (posCounter <= nextTriggerPos){
-        trigger_ch(2);
-        nextTriggerPos = nextTriggerPos - stepSize;
-      }
-      if (nextTriggerPos < lowRange){
-        upwardsMoving = true;
-        nextTriggerPos = lowRange;
-        nBScans++;
+    // check if we got a new serial command to stop triggering
+    // COMMAND_CHECK_INTERVALL is high, so we only check once in a while
+    if((millis()-lastCommandCheck)>=COMMAND_CHECK_INTERVALL)
+    {
+      lastCommandCheck = millis();
+      if (Serial.available() >= 2)
+      {
+        currentCommand = serial_read_16bit_no_wait();
+        if (currentCommand == DISABLE_POS_TRIGGER)
+        {
+          doTrigger = false;
+        }
       }
     }
-    while(posCounter > (lowRange - 2*stepSize)){
-      update_counter();     // update current counter value (stored in posCounter)
-    }; // leave range fully...
-
   } // while triggering
   digitalWriteFast(TRIGGER_LED, LOW);
 
   // send total trigger count over serial port to matlab
   serial_write_32bit(triggerCounter[2]);
   serial_write_16bit(DONE); // send the "ok, we are done" command
+
+  send_calibration_data();
+  serial_write_16bit(DONE); // send the "ok, we are done" command
+
 }
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
