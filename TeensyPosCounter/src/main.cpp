@@ -72,15 +72,26 @@ void loop()
         currentCommand = DO_NOTHING; // exit state machine
         break;
 
+      // -----------------------------------------------------------------------
       case CHECK_CONNECTION:
         serial_write_16bit(DONE); // send the "ok, we are done" command
         currentCommand = DO_NOTHING; // exit state machine
         break;
 
-      // -----------------------------------------------------------------------
-      case RESET_TEENSY:
-        CPU_RESTART;
+      case ENABLE_SCOPE_MODE:
+        digitalWriteFast(BUSY_LED, LOW);
+        scope_mode(); // send the "ok, we are done" command
+        serial_write_16bit(DONE); // send the "ok, we are done" command
+        delay(1000);
+        digitalWriteFast(BUSY_LED, HIGH);
+        currentCommand = DO_NOTHING; // exit state machine
         break;
+
+      // -----------------------------------------------------------------------
+      // NOTE seems to make problems, so we disable it for now...
+      // case RESET_TEENSY:
+        // CPU_RESTART;
+        // break;
       // -----------------------------------------------------------------------
       default:
         // statements

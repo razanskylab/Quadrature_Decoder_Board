@@ -28,7 +28,7 @@ function [pos,rawPos] = Collect_Calib_Data(AQ)
   % recording on the counter board is done and stored in memory there, lets grab it
   AQ.Write_Command(AQ.SEND_CALIB_DATA);
   AQ.Write_16Bit(uint16(AQ.MAX_BYTE_PER_READ));
-  while(AQ.bytesAvailable < AQ.MAX_BYTE_PER_READ)
+  while (AQ.bytesAvailable < AQ.MAX_BYTE_PER_READ)
   end
   [~,posCount] = AQ.Read_Data_Large(AQ.MAX_BYTE_PER_READ);
   AQ.Wait_Done(); % last thing teensy sends is an OK, we are done

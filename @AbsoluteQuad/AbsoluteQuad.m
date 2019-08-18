@@ -3,9 +3,10 @@
 
 classdef AbsoluteQuad < BaseHardwareClass
   properties
-    samplingPeriod(1,1) uint16 {mustBeInteger,mustBeNonnegative} = 1000; % [us]
+    samplingFreq(1,1) {mustBeNumeric,mustBeNonnegative,mustBeFinite} = 100;
     trigRange(1,2) {mustBeNumeric,mustBeNonnegative,mustBeFinite}; % [mm]
     trigStepSize(1,1) {mustBeNumeric,mustBeNonnegative,mustBeFinite}; % [um]
+    nTotalBScans(1,1) {mustBeNumeric,mustBeNonnegative,mustBeFinite}; % [um]
   end
 
   % depended properties are calculated from other properties
@@ -17,13 +18,15 @@ classdef AbsoluteQuad < BaseHardwareClass
       % expected number of triggers, based on trigger range and step size
     trigRangeCounts(1,2) {mustBeInteger,mustBeNonnegative,mustBeFinite}; % [pos counter pos.]
     trigStepSizeCounts(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite}; % [pos counter steps]
+    samplingPeriod(1,1) uint16 {mustBeInteger,mustBeNonnegative};
+      % [us or ms] -> see Enable_Scope_Mode for details on ms vs us
+    slowSampling(1,1); % sets samplingPeriod in us or ms
   end
 
   % things we don't want to accidently change but that still might be interesting
   properties (SetAccess = private, Transient = true)
     serialPtr = []; % pointer to serial port (we are using MEX Serial instead)
     isConnected = false;
-    samplingFreq; % sampling frequency in HZ
     lastTrigCount(1,1) {mustBeNumeric,mustBeNonnegative,mustBeFinite};
   end
 
@@ -48,6 +51,8 @@ classdef AbsoluteQuad < BaseHardwareClass
     RESET_TEENSY = uint16(44);
     ENABLE_POS_TRIGGER = uint16(55);
     DISABLE_POS_TRIGGER = uint16(56);
+    ENABLE_SCOPE_MODE = uint16(66);
+    DISABLE_SCOPE = uint16(67);
     CHECK_CONNECTION = uint16(98);
     DONE = uint16(99);
   end
@@ -108,9 +113,9 @@ classdef AbsoluteQuad < BaseHardwareClass
     end
 
     function [] = Reset_Teensy(AQ)
-      AQ.VPrintF('[AQ] Resetting Teensy...');
-      AQ.Write_Command(AQ.RESET_TEENSY);
-      pause(5); % give teensy time to restart...
+      AQ.VPrintF('[AQ] Resetting Teensy seems to not work!');
+      % AQ.Write_Command(AQ.RESET_TEENSY);
+      % pause(5); % give teensy time to restart...
       % AQ.Wait_Done(); % NOTE don't wait here, teensy is restarting...
     end
 
@@ -149,6 +154,7 @@ classdef AbsoluteQuad < BaseHardwareClass
       pos = AQ.Steps_To_MM(AQ.posCount);A
     end
 
+    % --------------------------------------------------------------------------
     function [posCount] = get.posCount(AQ)
       if AQ.isConnected
         AQ.Write_Command(AQ.SEND_CURRENT_POS);
@@ -157,12 +163,27 @@ classdef AbsoluteQuad < BaseHardwareClass
       else
         posCount = [];
       end
-      % posCount = AQ.Dev.get('posCount');
-      % posCount = AQ.Steps_To_MM(posCount); % convert to steps
     end
 
-    function [samplingFreq] = get.samplingFreq(AQ)
-      samplingFreq = 1./(double(AQ.samplingPeriod)*1e-6); % sampling frequency in HZ
+    % --------------------------------------------------------------------------
+    function [slowSampling] = get.slowSampling(AQ)
+      if AQ.samplingFreq > 20
+        % samplingPeriod in us
+        slowSampling = false;
+      else
+        % samplingPeriod in ms
+        slowSampling = true;
+      end
+    end
+    % --------------------------------------------------------------------------
+    function [samplingPeriod] = get.samplingPeriod(AQ)
+      if AQ.slowSampling
+        % samplingPeriod in ms
+        samplingPeriod = uint16(1./AQ.samplingFreq*1e3);
+      else
+        % samplingPeriod in us
+        samplingPeriod = uint16(1./AQ.samplingFreq*1e6);
+      end
     end
 
     function [bytesAvailable] = get.bytesAvailable(AQ)
