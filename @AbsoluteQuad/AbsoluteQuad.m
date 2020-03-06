@@ -103,7 +103,9 @@ classdef AbsoluteQuad < BaseHardwareClass
   methods % short methods, which are not worth putting in a file
 
     function [] = Write_Command(AQ, command)
-
+      if isempty(AQ.serialPtr) 
+        error('No valid serial pointer, need to connect first!');
+      end
       if ~isa(command, 'uint16')
         error('Counter commands must be uint16!');
       end
@@ -128,15 +130,19 @@ classdef AbsoluteQuad < BaseHardwareClass
 
     function [success] = Check_Connection(AQ)
       AQ.VPrintF('[AQ] Checking teensy connection');
-      AQ.Write_Command(AQ.CHECK_CONNECTION);
-      success = AQ.Wait_Done();
-
-      if success
-        AQ.VPrintF('...looking good!\n');
+      success = false;
+      if isempty(AQ.serialPtr) 
+        AQ.VPrintF('...no serial pointer -> no connection!\n');
+        return;
       else
-        error('Quad decoder requires reset! (Green tape out /in)!');
+        AQ.Write_Command(AQ.CHECK_CONNECTION);
+        success = AQ.Wait_Done();
+        if success
+          AQ.VPrintF('...looking good!\n');
+        else
+          AQ.VPrintF('...teensy requires reset!\n');
+        end
       end
-
     end
 
     function [] = Write_16Bit(AQ, data)
