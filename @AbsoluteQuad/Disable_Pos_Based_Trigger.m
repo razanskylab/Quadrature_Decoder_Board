@@ -17,7 +17,7 @@ function [] = Disable_Pos_Based_Trigger(AQ,timeOut)
       return;
     end
   end
-  [byteData,twoByteData] = AQ.Read_Data(4); % get 32 bit trigger counter value
+  [byteData,~] = AQ.Read_Data(4); % get 32 bit trigger counter value
   AQ.lastTrigCount = double(typecast(byteData,'uint32'));
   AQ.VPrintF('[AQ] Triggered %i times!\n',AQ.lastTrigCount);
   AQ.Wait_Done(); % last thing teensy sends is an OK, we are done

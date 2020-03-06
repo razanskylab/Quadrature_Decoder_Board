@@ -134,7 +134,7 @@ classdef AbsoluteQuad < BaseHardwareClass
       if success
         AQ.VPrintF('...looking good!\n');
       else
-        AQ.VPrintF('...teensy requires reset!\n');
+        error('Quad decoder requires reset! (Green tape out /in)!');
       end
 
     end
