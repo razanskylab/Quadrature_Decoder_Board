@@ -5,7 +5,7 @@
 function [resetWorked] = Soft_Reset(AQ)
   isConnected = AQ.Check_Connection();
 
-  if ~isConnected
+  if ~isConnected && ~isempty(AQ.serialPtr)
     AQ.VPrintF('Attempting to gain AQ control back...\n');
     AQ.Disable_Pos_Based_Trigger(0.25);
     AQ.Disable_Scope(0.25);
