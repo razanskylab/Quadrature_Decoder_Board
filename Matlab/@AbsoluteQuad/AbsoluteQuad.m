@@ -8,6 +8,7 @@ classdef AbsoluteQuad < BaseHardwareClass
     trigRange(1, 2) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [mm]
     trigStepSize(1, 1) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [um]
     nTotalBScans(1, 1) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [um]
+    SERIAL_PORT = 'COM11';
   end
 
   % depended properties are calculated from other properties
@@ -34,7 +35,6 @@ classdef AbsoluteQuad < BaseHardwareClass
   % things we don't want to accidently change but that still might be interesting
   properties (Constant)
     % serial properties
-    SERIAL_PORT = 'COM11';
     BAUD_RATE = 9600;
 
     STEP_SIZE = 200e-6; % [mm] one microstep = 0.2 micron
