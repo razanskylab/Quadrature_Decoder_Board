@@ -130,8 +130,8 @@
                 "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/ks0108",
                 "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/ssd1351",
                 "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/x10",
-                "c:/Code/Quadrature_Decoder_Board/TeensyPosCounter/include",
-                "c:/Code/Quadrature_Decoder_Board/TeensyPosCounter/src",
+                "c:/Code/Quadrature_Decoder_Board/Firmware/include",
+                "c:/Code/Quadrature_Decoder_Board/Firmware/src",
                 "C:/Users/johan/.platformio/packages/framework-arduinoteensy/cores/teensy3",
                 "C:/Users/johan/.platformio/packages/tool-unity",
                 ""
@@ -263,8 +263,8 @@
                     "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/ks0108",
                     "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/ssd1351",
                     "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/x10",
-                    "c:/Code/Quadrature_Decoder_Board/TeensyPosCounter/include",
-                    "c:/Code/Quadrature_Decoder_Board/TeensyPosCounter/src",
+                    "c:/Code/Quadrature_Decoder_Board/Firmware/include",
+                    "c:/Code/Quadrature_Decoder_Board/Firmware/src",
                     "C:/Users/johan/.platformio/packages/framework-arduinoteensy/cores/teensy3",
                     "C:/Users/johan/.platformio/packages/tool-unity",
                     ""
@@ -274,12 +274,14 @@
                 "PLATFORMIO=40304",
                 "__MK66FX1M0__",
                 "ARDUINO_TEENSY36",
+                "TEENSY_OPT_FASTEST_PURE_CODE",
                 "USB_SERIAL",
                 "ARDUINO=10805",
                 "TEENSYDUINO=153",
                 "CORE_TEENSY",
                 "F_CPU=240000000L",
                 "LAYOUT_US_ENGLISH",
+                "__PURE_CODE__",
                 ""
             ],
             "intelliSenseMode": "clang-x64",
@@ -290,6 +292,7 @@
                 "-mcpu=cortex-m4",
                 "-mfloat-abi=hard",
                 "-mfpu=fpv4-sp-d16",
+                "-mpure-code",
                 ""
             ]
         }

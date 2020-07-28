@@ -1,4 +1,7 @@
-
-TeensyPosCounter/.pio/build/
-
-TeensyPosCounter/.vscode/
+Firmware/.pio/
+Firmware/.vscode/
+Firmware/.pioenvs
+Firmware/.piolibdeps
+Firmware/.clang_complete
+Firmware/.gcc-flags.json
+Firmware/.pio*

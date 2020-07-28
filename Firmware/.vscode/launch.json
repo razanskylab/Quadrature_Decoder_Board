@@ -12,7 +12,7 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "c:/Code/Quadrature_Decoder_Board/TeensyPosCounter/.pio/build/teensy36/firmware.elf",
+            "executable": "c:/Code/Quadrature_Decoder_Board/Firmware/.pio/build/teensy36/firmware.elf",
             "toolchainBinDir": "C:/Users/johan/.platformio/packages/toolchain-gccarmnoneeabi/bin",
             "svdPath": "C:/Users/johan/.platformio/platforms/teensy/misc/svd/MK66F18.svd",
             "preLaunchTask": {
@@ -25,7 +25,7 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "c:/Code/Quadrature_Decoder_Board/TeensyPosCounter/.pio/build/teensy36/firmware.elf",
+            "executable": "c:/Code/Quadrature_Decoder_Board/Firmware/.pio/build/teensy36/firmware.elf",
             "toolchainBinDir": "C:/Users/johan/.platformio/packages/toolchain-gccarmnoneeabi/bin",
             "svdPath": "C:/Users/johan/.platformio/platforms/teensy/misc/svd/MK66F18.svd",
             "internalConsoleOptions": "openOnSessionStart"

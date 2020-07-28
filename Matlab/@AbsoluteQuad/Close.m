@@ -1,17 +1,18 @@
-% function [] = Close(VCS)
+% function [] = Close(obj)
 % does something coole...
 % Johannes Rebling, (johannesrebling@gmail.com), 2019
 
-function [] = Close(AQ)
+function [] = Close(Obj)
   tic;
 
-  if ~isempty(AQ.serialPtr) && AQ.isConnected
-    AQ.VPrintF('[AQ] Closing connection to counter...');
-    closePort(AQ.serialPtr);
-    AQ.serialPtr = [];
-    AQ.Done();
+  if ~isempty(Obj.serialPtr) && Obj.isConnected
+    Obj.VPrintF('[AQ] Closing connection to counter...');
+    closePort(Obj.serialPtr);
+    Obj.serialPtr = [];
+    Obj.Done();
   else
-    AQ.VPrintF('[AQ] Connection was not open!\n');
+    Obj.VPrintF('[AQ] Connection was not open!\n');
+    Obj.isConnected = false;
   end
 
 end
