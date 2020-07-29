@@ -78,7 +78,7 @@ const uint8_t MICRON = 5; // one micron = 5 steps
 #define DONE 99
 
 // HCTL related constants
-const uint32_t HCTL_CLOCK_SIGNAL = MEGA*40; // DO NOT CHANGE!!!
+const uint32_t HCTL_CLOCK_SIGNAL = MEGA*20; // DO NOT CHANGE!!!
 const uint8_t pinTable[] = {2,14,7,8,6,20,21,5};
 
 // position related con

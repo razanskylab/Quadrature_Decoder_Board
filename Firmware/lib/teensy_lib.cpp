@@ -46,8 +46,8 @@ void update_counter() {
   // we do this after changing pin, as data now needs time to settle...
   // ((uint8_t *)&counter)[1] = msb;
 
-  WAIT_100_NS; // allow high bit to be stable
-  WAIT_100_NS; // allow high bit to be stable
+  WAIT_100_NS; // allow low bit to be stable
+  
   ((unsigned char *)&posCounter)[0] = GPIOD_PDIR & 0xFF; // read lsb
   // finish read out
   digitalWriteFast(HCTL_OE_PIN, HIGH);

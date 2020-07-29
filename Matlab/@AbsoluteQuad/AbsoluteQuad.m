@@ -56,6 +56,8 @@ classdef AbsoluteQuad < BaseHardwareClass
     DISABLE_SCOPE = uint16(67);
     CHECK_CONNECTION = uint16(98);
     DONE = uint16(99);
+
+    ID = 'AQ'; % used for print [AQ] etc...
   end
 
   % same as constant but now showing up as property
