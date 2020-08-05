@@ -8,6 +8,7 @@ classdef AbsoluteQuad < BaseHardwareClass
     trigRange(1, 2) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [mm]
     trigStepSize(1, 1) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [um]
     nTotalBScans(1, 1) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [um]
+    classId = '[AQ]';
     SERIAL_PORT = 'COM11';
   end
 
@@ -34,7 +35,6 @@ classdef AbsoluteQuad < BaseHardwareClass
 
   % things we don't want to accidently change but that still might be interesting
   properties (Constant)
-    % serial properties
     BAUD_RATE = 9600;
 
     STEP_SIZE = 200e-6; % [mm] one microstep = 0.2 micron
@@ -69,19 +69,21 @@ classdef AbsoluteQuad < BaseHardwareClass
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods
     % constructor, called when class is created
-    function AQ = AbsoluteQuad(doConnect)
-
+    function Obj = AbsoluteQuad(doConnect)
       if nargin < 1
-        doConnect = AQ.DO_AUTO_CONNECT;
+        doConnect = Obj.DO_AUTO_CONNECT;
       end
 
-      if doConnect &&~AQ.isConnected
-        AQ.Connect;
-        AQ.Soft_Reset();
-      elseif ~AQ.isConnected
-        AQ.VPrintF('[AQ] Initialized but not connected yet.\n');
+      if nargin == 1 && ischar(doConnect)
+        Obj.SERIAL_PORT = doConnect;
+        doConnect = true;
       end
 
+      if doConnect && ~Obj.isConnected
+        Obj.Connect;
+      elseif ~Obj.isConnected
+        Obj.VPrintF_With_ID('Initialized but not connected yet.\n');
+      end
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -117,17 +119,13 @@ classdef AbsoluteQuad < BaseHardwareClass
     end
 
     function [success] = Rest_HCTL_Counter(AQ)
-      AQ.VPrintF('[AQ] Resetting HCTL counter...');
+      AQ.VPrintF_With_ID('Resetting HCTL counter...');
       AQ.Write_Command(AQ.RESET_HCTL_COUNTER);
       success = AQ.Wait_Done();
       AQ.Done();
     end
 
     function [] = Reset_Teensy(AQ)
-      AQ.VPrintF('[AQ] Resetting Teensy seems to not work!');
-      % AQ.Write_Command(AQ.RESET_TEENSY);
-      % pause(5); % give teensy time to restart...
-      % AQ.Wait_Done(); % NOTE don't wait here, teensy is restarting...
     end
 
     function [success] = Check_Connection(AQ)
