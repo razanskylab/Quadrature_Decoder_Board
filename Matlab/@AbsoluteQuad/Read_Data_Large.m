@@ -11,12 +11,12 @@ function [byteData,twoByteData] = Read_Data_Large(AQ,nBytes)
   end
 
   if nBytes > AQ.MAX_BYTE_PER_READ
-    errMessage = sprintf('Can''t read more than %i bytes at once!',AQ.MAX_BYTE_PER_READ);
-    error(errMessage);
+    error('Can''t read more than %i bytes at once!',...
+      AQ.MAX_BYTE_PER_READ);
   end
 
   % tic();
-  % AQ.VPrintF('[AQ] Reading %i bytes of data...',nBytes);
+  % AQ.VVPrintF_With_ID(' Reading %i bytes of data...',nBytes);
   byteData = readPortLarge(AQ.serialPtr, nBytes);
 
   %% convert to uint16 again

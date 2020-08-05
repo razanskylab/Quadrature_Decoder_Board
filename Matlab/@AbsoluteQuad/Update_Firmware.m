@@ -10,8 +10,11 @@ function [] = Update_Firmware(Obj)
   end
   Obj.PrintF('[%s] Updating teensy code using Platformio:\n',Obj.ID);
   Obj.Close();
-  matlabPath = pwd;
-  cd ..\Firmware\;
+  % get path to matlab class file, then navigate to Firmware folder from
+  % there
+  classPath = which('AbsoluteQuad');
+  basePath = classPath(1:strfind(classPath,'Matlab')-1);
+  matlabPath = cd([basePath '\Firmware\']);
   Obj.PrintF('Compiling and uploading,this might take a few seconds...\n');
   % run power shell, compile and upload using platformio (needs to be correctly installed)
   Obj.PrintF('\n\n');

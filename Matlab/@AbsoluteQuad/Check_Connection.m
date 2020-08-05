@@ -1,6 +1,6 @@
 function [success] = Check_Connection(Obj)
   Obj.Flush_Serial(); % make sure to get rid of old bytes...
-  Obj.PrintF('[AQ] Checking connection...');
+  Obj.VPrintF_With_ID('Checking connection...');
   Obj.Write_Command(Obj.CHECK_CONNECTION);
   timeOut = 1; % 1 seconds default timeout
 
@@ -16,7 +16,7 @@ function [success] = Check_Connection(Obj)
 
   [~,answer] = Obj.Read_Data(2);
   if answer ~= Obj.READY_FOR_COMMAND
-    error('[AQ] Something went wrong in the teensy!');
+    error('  Something went wrong in the teensy!');
   else
     success = true;
     Obj.PrintF('we are ready to go!\n');

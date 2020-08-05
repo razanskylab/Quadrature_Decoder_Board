@@ -7,7 +7,7 @@ function [] = Disable_Pos_Based_Trigger(AQ,timeOut)
   end
 
   t1 = tic();
-  AQ.PrintF('[AQ] Disabling position based trigger: ');
+  AQ.VPrintF_With_ID('Disabling position based trigger: ');
   % AQ.Write_Command(AQ.DISABLE_POS_TRIGGER);
   % wait for data to come in...
   while (AQ.bytesAvailable<4)

@@ -3,7 +3,7 @@
 
 function [pos,rawPos] = Collect_Calib_Data(AQ)
   tic;
-  AQ.PrintF('[AQ] Collecting callibration data\n');
+  AQ.VPrintF_With_ID('Collecting callibration data\n');
 
   % fancy wait bar, all it does it waiting
   recTime = AQ.CALIB_ARRAY_SIZE./AQ.samplingFreq;

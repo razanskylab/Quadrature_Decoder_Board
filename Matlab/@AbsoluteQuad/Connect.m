@@ -4,9 +4,9 @@
 function [] = Connect(AQ)
   t1 = tic;
   if ~isempty(AQ.serialPtr) && AQ.isConnected
-    AQ.VPrintF('[AQ] Counter already connected!\n');
+    AQ.VPrintF_With_ID('Already connected!\n');
   else
-    AQ.VPrintF('[AQ] Connecting to counter...');
+    AQ.VPrintF_With_ID('Connecting...');
     try
       AQ.serialPtr = openPort(AQ.SERIAL_PORT,AQ.BAUD_RATE);
       AQ.isConnected = true;

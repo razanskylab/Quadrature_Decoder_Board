@@ -8,9 +8,9 @@ function [] = Restart_Teensy(Obj)
   % not exist, we just stop here...
   usrFolder =  getenv('USERPROFILE');
   teensyFolder = [usrFolder '\.platformio\packages\tool-teensy\'];
-  teensyExe = [teensyFolder 'teensy.exe']
-  teensyReboot = [teensyFolder 'teensy_reboot.exe']
-  Obj.PrintF('Checking for teensy toolbox for restart...');
+  teensyExe = [teensyFolder 'teensy.exe'];
+  teensyReboot = [teensyFolder 'teensy_reboot.exe'];
+  Obj.VPrintF_With_ID('Checking for teensy toolbox for restart...');
   teensyFound = exist(teensyExe,'file') == 2;
   if ~teensyFound
     error('Can not find teensy.exe, make sure Platformio and teensy platform are installed!');
@@ -18,7 +18,7 @@ function [] = Restart_Teensy(Obj)
     Obj.PrintF('found!\n');
   end
 
-  Obj.PrintF('Restarting microcontroller, this takes a few seconds.\n');
+  Obj.VPrintF_With_ID('Restarting uC, this takes a few seconds.\n');
   if Obj.isConnected
     Obj.Close();
   end
@@ -32,10 +32,10 @@ function [] = Restart_Teensy(Obj)
   % [status] = system(fullCmd); % sends restart command
 
   system([teensyExe ' &']); % open teensy exe
-  rebootStatus = system([teensyReboot]); % run reboot
+  rebootStatus = system(teensyReboot); % run reboot
 
   % pause(0.25); % give matlab a chance to check what is going on, i.e. port is missing
-  Obj.PrintF('Restart initiated, waiting for teensy to show up\n');
+  Obj.PrintF('  Restart initiated, waiting for teensy to show up\n');
   waitForPort = true;
   while(waitForPort)
     availPorts = serialportlist();
@@ -52,9 +52,10 @@ function [] = Restart_Teensy(Obj)
 
   if rebootStatus
     Obj.PrintF('\n\n');
-    short_warn('Restart failed:');
+    short_warn('  Restart failed:');
   else
-    Obj.PrintF('Microcontroller restarted successfully!\n');
+    Obj.PrintF('  Microcontroller restarted successfully!\n');
+    Obj.PrintF('  You can close the opened windows!\n');
   end
 
 end

@@ -8,7 +8,7 @@ function [] = Disable_Scope(AQ,timeOut)
 
   % starts recording of the calibration data in the teensy
   t1 = tic();
-  AQ.PrintF('[AQ] Disabling scope trigger\n');
+  AQ.VPrintF_With_ID('Disabling scope trigger\n');
   AQ.Write_Command(AQ.DISABLE_SCOPE);
   % wait for data to come in...
   while (AQ.bytesAvailable<4)
@@ -20,6 +20,6 @@ function [] = Disable_Scope(AQ,timeOut)
   end
   [byteData,twoByteData] = AQ.Read_Data(4); % get 32 bit trigger counter value
   AQ.lastTrigCount = double(typecast(byteData,'uint32'));
-  AQ.VPrintF('[AQ] Triggered %i times!\n',AQ.lastTrigCount);
+  AQ.VVPrintF_With_ID(' Triggered %i times!\n',AQ.lastTrigCount);
   AQ.Wait_Done();
 end

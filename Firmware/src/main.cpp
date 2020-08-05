@@ -6,7 +6,7 @@ void setup() {
 
   // PWM clock for HCTL
   analogWriteFrequency(HCTL_CLOCK_PIN, HCTL_CLOCK_SIGNAL);
-  analogWrite(HCTL_CLOCK_PIN, 128); // set to 50% duty cycle
+  analogWrite(HCTL_CLOCK_PIN, 180); // set to 50% duty cycle
 
   Serial.begin(9600);
   // Serial.begin(912600);

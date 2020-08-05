@@ -8,7 +8,7 @@ classdef AbsoluteQuad < BaseHardwareClass
     trigRange(1, 2) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [mm]
     trigStepSize(1, 1) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [um]
     nTotalBScans(1, 1) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [um]
-    classId = '[AQ]';
+    classId = '[Decoder]';
     SERIAL_PORT = 'COM11';
   end
 
@@ -118,18 +118,15 @@ classdef AbsoluteQuad < BaseHardwareClass
       AQ.Write_Data(command);
     end
 
-    function [success] = Rest_HCTL_Counter(AQ)
+    function [success] = Reset_HCTL_Counter(AQ)
       AQ.VPrintF_With_ID('Resetting HCTL counter...');
       AQ.Write_Command(AQ.RESET_HCTL_COUNTER);
       success = AQ.Wait_Done();
       AQ.Done();
     end
 
-    function [] = Reset_Teensy(AQ)
-    end
-
     function [success] = Check_Connection(AQ)
-      AQ.VPrintF('[AQ] Checking teensy connection');
+      AQ.VPrintF_With_ID('Checking teensy connection');
       success = false;
       if isempty(AQ.serialPtr) 
         AQ.VPrintF('...no serial pointer -> no connection!\n');
@@ -152,7 +149,7 @@ classdef AbsoluteQuad < BaseHardwareClass
     function [steps] = MM_To_Steps(AQ, mm)
 
       if mod(mm, AQ.STEP_SIZE)
-        error('[AQ] Non integer conversion!');
+        error('Error in Write_16Bit(): Non integer conversion!');
       end
 
       steps = round(mm ./ AQ.STEP_SIZE); % max rounding error is 200 nm...

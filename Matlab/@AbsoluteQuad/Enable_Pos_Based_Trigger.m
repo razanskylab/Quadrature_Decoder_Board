@@ -10,7 +10,7 @@ function [] = Enable_Pos_Based_Trigger(AQ)
   stepCnt = uint16(AQ.trigStepSizeCounts);
   nBScan = uint16(AQ.nTotalBScans);
 
-  AQ.PrintF('[AQ] Enabling position based trigger\n');
+  AQ.VPrintF_With_ID('Enabling position based trigger\n');
   AQ.VPrintF('   range: %2.1f<->%2.1f mm (%i<->%i)\n',...
     AQ.trigRange,lowTrigRangeCnt,highTrigRangeCnt);
   AQ.VPrintF('   step size: %1.0f um (steps %i)\n',AQ.trigStepSize,stepCnt);

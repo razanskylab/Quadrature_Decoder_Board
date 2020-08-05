@@ -5,7 +5,7 @@
 function [] = Write_Data(AQ,data)
   if AQ.isConnected
     tic();
-    % AQ.VPrintF('[AQ] Writing %i bytes of data...',numel(data));
+    % AQ.VVPrintF_With_ID(' Writing %i bytes of data...',numel(data));
     if ~isa(data,'uint8')
       AQ.Verbose_Warn('   Data converted to uint8!');
       data = uint8(data);
