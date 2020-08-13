@@ -5,8 +5,10 @@ void setup() {
   setup_io_pins();
 
   // PWM clock for HCTL
-  analogWriteFrequency(HCTL_CLOCK_PIN, HCTL_CLOCK_SIGNAL);
-  analogWrite(HCTL_CLOCK_PIN, 180); // set to 50% duty cycle
+  // HCTL_CLOCK_PIN = 10;
+  // HCTL_CLOCK_SIGNAL = MEGA*10
+  analogWriteFrequency(HCTL_CLOCK_PIN, MEGA*10); // HCTL max clk is 14 MHz
+  analogWrite(HCTL_CLOCK_PIN, 160); // set to 50% duty cycle
 
   Serial.begin(9600);
   // Serial.begin(912600);
