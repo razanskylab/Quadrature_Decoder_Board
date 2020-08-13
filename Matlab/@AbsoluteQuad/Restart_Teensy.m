@@ -32,6 +32,7 @@ function [] = Restart_Teensy(Obj)
   % [status] = system(fullCmd); % sends restart command
 
   system([teensyExe ' &']); % open teensy exe
+  pause(1); % wait for teensy ext to start
   rebootStatus = system(teensyReboot); % run reboot
 
   % pause(0.25); % give matlab a chance to check what is going on, i.e. port is missing
