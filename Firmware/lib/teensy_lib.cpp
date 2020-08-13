@@ -34,38 +34,21 @@ void setup_io_pins() {
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-void update_counter() {
+FASTRUN void update_counter() {
   digitalWriteFast(HCTL_SEL_PIN, LOW); // select high bit
   digitalWriteFast(HCTL_OE_PIN, LOW); // start read
-
-  WAIT_100_NS; // allow high bit to be stable
-  WAIT_100_NS; // allow high bit to be stable
-  WAIT_100_NS; // allow high bit to be stable
-  WAIT_100_NS; // allow high bit to be stable
-  WAIT_100_NS; // allow high bit to be stable.
-  ((unsigned char *)&posCounter)[1] = GPIOD_PDIR & 0xFF; // read msb
-
-  digitalWriteFast(HCTL_SEL_PIN, HIGH); // select low bit
+  // wait until HCTL chip has data stable at output
+  // NOTE from SEL high/low to stable, selected data byte = 65 ns
+  // we wait ~72 when using overclocked teensy
+  WAIT_24_NS; WAIT_48_NS;
   // get msb, write directly to counter, also turns uint to int...lots of magic here
-  // we do this after changing pin, as data now needs time to settle...
-  // ((uint8_t *)&counter)[1] = msb;
-
-  WAIT_100_NS; // allow low bit to be stable
-  WAIT_100_NS; // allow low bit to be stable
-  WAIT_100_NS; // allow low bit to be stable
-  WAIT_100_NS; // allow low bit to be stable
-  WAIT_100_NS; // allow low bit to be stable
-  
+  ((unsigned char *)&posCounter)[1] = GPIOD_PDIR & 0xFF; // read msb
+  digitalWriteFast(HCTL_SEL_PIN, HIGH); // select low bit
+  // wait until HCTL chip has data stable at output = 65 ns
+  WAIT_24_NS; WAIT_48_NS;
   ((unsigned char *)&posCounter)[0] = GPIOD_PDIR & 0xFF; // read lsb
   // finish read out
   digitalWriteFast(HCTL_OE_PIN, HIGH);
-  // digitalWriteFast(HCTL_SEL_PIN, HIGH);
-  // might need to add delay here...
-
-  // get lsb, write directly to counter, also turns uint to int...lots of magic here
-  // ((uint8_t *)&counter)[0] = lsb;
-  // if (posCounter == minusOne)
-  //   Serial.println("OVERFLOW WARN!");
 }
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,8 +61,8 @@ void trigger_ch(uint8_t channel) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // reset counter chip values to zero
 void reset_hctl() {
-  digitalWriteFast(HCTL_RST_PIN, LOW); // start read
-  WAIT_60_NS;
+  digitalWriteFast(HCTL_RST_PIN, LOW); 
+  WAIT_96_NS; // min is 28ns but we have no rush here...
   digitalWriteFast(HCTL_RST_PIN, HIGH);
 }
 

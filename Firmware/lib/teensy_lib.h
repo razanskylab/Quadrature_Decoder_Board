@@ -55,13 +55,16 @@ const uint8_t MICRON = 5; // one micron = 5 steps
 // define general constants %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 // wait a few clock cycles
-#define NOP __asm__ __volatile__ ("nop\n\t") // ~6 ns = one clock cycle
-#define WAIT_10_NS NOP; NOP;
-#define WAIT_20_NS NOP; NOP; NOP; NOP;
-#define WAIT_40_NS WAIT_20_NS; WAIT_20_NS;
-#define WAIT_60_NS WAIT_20_NS; WAIT_20_NS; WAIT_20_NS;
-#define WAIT_80_NS WAIT_40_NS; WAIT_40_NS;
-#define WAIT_100_NS WAIT_80_NS; WAIT_20_NS;
+#define NOP __asm__ __volatile__ ("nop\n\t") 
+// at 180 MHz (default), 1 NOP = 5.76 ns
+// at 256 MHz, 1 NOP = 4 ns
+
+#define WAIT_12_NS NOP; NOP; NOP;
+#define WAIT_24_NS WAIT_12_NS; WAIT_12_NS;
+#define WAIT_48_NS WAIT_24_NS; WAIT_24_NS;
+#define WAIT_96_NS WAIT_48_NS; WAIT_48_NS;
+#define WAIT_96_NS WAIT_48_NS; WAIT_48_NS;
+#define WAIT_192_NS WAIT_96_NS; WAIT_96_NS;
 
 // define commands
 #define DO_NOTHING 0

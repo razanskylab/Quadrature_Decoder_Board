@@ -5,21 +5,19 @@ void setup() {
   setup_io_pins();
 
   // PWM clock for HCTL
-  // HCTL_CLOCK_PIN = 10;
-  // HCTL_CLOCK_SIGNAL = MEGA*10
   analogWriteFrequency(HCTL_CLOCK_PIN, MEGA*10); // HCTL max clk is 14 MHz
-  analogWrite(HCTL_CLOCK_PIN, 160); // set to 50% duty cycle
+  analogWrite(HCTL_CLOCK_PIN, 160); // set to slight more than 50% duty cycle
 
   Serial.begin(9600);
-  // Serial.begin(912600);
-  // Serial.println("Teensy quadrature decoder is ready to rumble!");
-  // reset counter on start up (is done automatically but we don't like implicit stuff...)
+  // reset counter on start up 
+  // (its' done automatically but we don't like implicit stuff...)
   reset_hctl();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-void loop()
+FASTRUN void loop()
 {
+  // while true avoids overhead of main loop
   while(true){
     // read a command if one was send
     if (Serial.available() > 1) {
@@ -89,11 +87,6 @@ void loop()
         currentCommand = DO_NOTHING; // exit state machine
         break;
 
-      // -----------------------------------------------------------------------
-      // NOTE seems to make problems, so we disable it for now...
-      // case RESET_TEENSY:
-        // CPU_RESTART;
-        // break;
       // -----------------------------------------------------------------------
       default:
         // statements
