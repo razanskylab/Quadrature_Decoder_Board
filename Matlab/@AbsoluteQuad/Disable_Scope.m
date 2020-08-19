@@ -18,8 +18,8 @@ function [] = Disable_Scope(AQ,timeOut)
       return;
     end
   end
-  [byteData,twoByteData] = AQ.Read_Data(4); % get 32 bit trigger counter value
+  [byteData,~] = AQ.Read_Data(4); % get 32 bit trigger counter value
   AQ.lastTrigCount = double(typecast(byteData,'uint32'));
-  AQ.VVPrintF_With_ID(' Triggered %i times!\n',AQ.lastTrigCount);
+  AQ.VPrintF_With_ID(' Triggered %i times!\n',AQ.lastTrigCount);
   AQ.Wait_Done();
 end

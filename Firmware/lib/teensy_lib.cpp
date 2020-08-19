@@ -204,11 +204,12 @@ void pos_based_triggering(){
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 void scope_mode(){
+  uint8_t triggerCh = 0; // where is trigger board connected?
   uint16_t slowMode = serial_read_16bit(); // delay in ms or us
   uint16_t triggerPeriod = serial_read_16bit();
   uint16_t nTrigger = serial_read_16bit(); // trigger how many times?
   uint32_t lastCommandCheck = 0;
-  triggerCounter[2] = 0; // trigger counter for channel 2
+  triggerCounter[triggerCh] = 0; // trigger counter for channel 2
   bool doTrigger = true;
   digitalWriteFast(TRIGGER_LED, HIGH);
 
@@ -222,7 +223,7 @@ void scope_mode(){
       while((micros()-lastSamplingTime)<triggerPeriod){};
       lastSamplingTime = micros();
     }
-    trigger_ch(2); // triggers 2nd board, which then triggers different things...
+    trigger_ch(triggerCh); // change trigger signal on trig channel (zero indexed)
 
     // if nTrigger = 0 we trigger indefinately
     if (nTrigger && (triggerCounter[2] >= nTrigger)){
@@ -244,6 +245,6 @@ void scope_mode(){
       }
     }
   }
-  serial_write_32bit(triggerCounter[2]);
+  serial_write_32bit(triggerCounter[triggerCh]);
   digitalWriteFast(TRIGGER_LED, LOW);
 }
