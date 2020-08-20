@@ -165,7 +165,7 @@ void pos_based_triggering(){
     while(upwardsMoving){
       update_counter();     // update current counter value (stored in posCounter)
       if (posCounter >= nextTriggerPos){
-        trigger_ch(2);
+        trigger_ch(0);
         nextTriggerPos = nextTriggerPos + stepSize;
       }
       if (nextTriggerPos > upRange){
@@ -181,7 +181,7 @@ void pos_based_triggering(){
     while(!upwardsMoving){
       update_counter();     // update current counter value (stored in posCounter)
       if (posCounter <= nextTriggerPos){
-        trigger_ch(2);
+        trigger_ch(0);
         nextTriggerPos = nextTriggerPos - stepSize;
       }
       if (nextTriggerPos < lowRange){
