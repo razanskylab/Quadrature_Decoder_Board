@@ -151,13 +151,15 @@ void pos_based_triggering(){
   uint16_t nTotalBscans = serial_read_16bit();  // get nBscans
   uint16_t nBScans = 0;  // get nBscans
 
+  uint8_t trigChannel = 0; 
+
   // get currentTriggers? -> no need, just calc here...
-  triggerCounter[2] = 0; // trigger counter for channel 2
+  triggerCounter[trigChannel] = 0; // trigger counter for channel 2
   uint8_t upwardsMoving = true;
   uint16_t nextTriggerPos = lowRange;
 
   digitalWriteFast(TRIGGER_LED, HIGH);
-
+  
   while(nBScans < nTotalBscans)
   {
     update_counter();     // update current counter value (stored in posCounter)
@@ -165,7 +167,7 @@ void pos_based_triggering(){
     while(upwardsMoving){
       update_counter();     // update current counter value (stored in posCounter)
       if (posCounter >= nextTriggerPos){
-        trigger_ch(0);
+        trigger_ch(trigChannel);
         nextTriggerPos = nextTriggerPos + stepSize;
       }
       if (nextTriggerPos > upRange){
@@ -181,7 +183,7 @@ void pos_based_triggering(){
     while(!upwardsMoving){
       update_counter();     // update current counter value (stored in posCounter)
       if (posCounter <= nextTriggerPos){
-        trigger_ch(0);
+        trigger_ch(trigChannel);
         nextTriggerPos = nextTriggerPos - stepSize;
       }
       if (nextTriggerPos < lowRange){
@@ -198,7 +200,7 @@ void pos_based_triggering(){
   digitalWriteFast(TRIGGER_LED, LOW);
 
   // send total trigger count over serial port to matlab
-  serial_write_32bit(triggerCounter[2]);
+  serial_write_32bit(triggerCounter[trigChannel]);
   serial_write_16bit(DONE); // send the "ok, we are done" command
 }
 
