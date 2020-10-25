@@ -37,6 +37,7 @@ namespace quad {
     void Free_Running_Trigger(); // get latest counter value from HCTL
     void Pos_Based_Trigger(); // get latest counter value from HCTL
     void Toggle_Trigger_Channel(int8_t channel);
+    void Send_Current_Position(); // read and send current HCTL counter value / pos
   };
 } // namespace
 

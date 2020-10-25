@@ -75,15 +75,13 @@ void QuadDecoder::Handle_Matlab_Interface(){
 
       // -----------------------------------------------------------------------
       case SEND_CURRENT_POS:
-        Read_HCTL_Counter();
-        MLS.Send_Command(posCounter);
+        Send_Current_Position();
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
       // -----------------------------------------------------------------------
       case RESET_HCTL_COUNTER:
         Reset_HCTL();
-        MLS.Send_Command(DONE); // send the "ok, we are done" command
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
@@ -122,9 +120,11 @@ void QuadDecoder::Handle_Matlab_Interface(){
 /******************************************************************************/
 // reset hctl to reset to zero 
 void QuadDecoder::Reset_HCTL() const{
+  MLS.Serial_Write_16bit(RESET_HCTL_COUNTER); // send as confirmation
   digitalWriteFast(HCTL_RST_PIN, LOW); 
   WAIT_96_NS; // min is 28ns but we have no rush here...
   digitalWriteFast(HCTL_RST_PIN, HIGH);
+  MLS.Serial_Write_16bit(DONE); // send as confirmation
 }
 
 /******************************************************************************/
@@ -134,6 +134,15 @@ void QuadDecoder::Toggle_Trigger_Channel(int8_t channel){
   trigPinState[channel] = !trigPinState[channel]; 
   digitalWriteFast(TRIG_OUT_PINS[channel], trigPinState[channel]);
   triggerCounter[channel]++; // increment trigger count
+}
+
+/******************************************************************************/
+// reset hctl to reset to zero 
+void QuadDecoder::Send_Current_Position(){
+  MLS.Serial_Write_16bit(SEND_CURRENT_POS); // send as confirmation
+  Read_HCTL_Counter();
+  MLS.Serial_Write_16bit(posCounter);
+  MLS.Serial_Write_16bit(DONE); // send as confirmation
 }
 
 /******************************************************************************/
@@ -207,16 +216,22 @@ void QuadDecoder::Free_Running_Trigger(){
 /******************************************************************************/
 // start position based triggering
 void QuadDecoder::Pos_Based_Trigger(){
+  MLS.Serial_Write_16bit(ENABLE_POS_TRIGGER);
   bool doWait = true;
   uint16_t lowRange = MLS.Serial_Read_16bit(doWait);
   uint16_t upRange = MLS.Serial_Read_16bit(doWait);
-    // enable trigger between lowRange and upRange
   uint16_t stepSize = MLS.Serial_Read_16bit(doWait);  // trigger ever stepSize steps
   uint16_t nTotalBscans = MLS.Serial_Read_16bit(doWait);  // get nBscans
-  
+  // uint32_t totalScanTime = MLS.Serial_Read_32bit(doWait);  // get total scan time
+
+  // send back data we just read as our kind of handshake
+  MLS.Serial_Write_16bit(lowRange); 
+  MLS.Serial_Write_16bit(upRange); 
+  MLS.Serial_Write_16bit(stepSize); 
+  MLS.Serial_Write_16bit(nTotalBscans); 
+
   // TODO
   // send aproximate scan time to check if we got stuck...
-
   // TODO
   // check for serial commands when leaving upper / lower trigger range
   // at this point we know we have some time before we need to trigger again

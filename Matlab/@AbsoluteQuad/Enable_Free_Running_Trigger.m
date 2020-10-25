@@ -1,6 +1,3 @@
-% function [] = Enable_Scope_Mode(Obj)
-% Johannes Rebling, (johannesrebling@gmail.com), 2019
-
 function [] = Enable_Free_Running_Trigger(Obj,nTrigger)
   % starts recording of the calibration data in the teensy
   %  triggerPeriod = serial_read_16bit();
@@ -22,7 +19,7 @@ function [] = Enable_Free_Running_Trigger(Obj,nTrigger)
 
   Obj.Flush_Serial();
   Obj.Write_Command(Obj.START_FREE_RUNNING_TRIGGER);
-  if Obj.Confirm_Command(Obj.START_FREE_RUNNING_TRIGGER);
+  if Obj.Confirm_Command(Obj.START_FREE_RUNNING_TRIGGER)
 
     Obj.Write_Data(slowMode);
     Obj.Write_Data(triggerPeriod);

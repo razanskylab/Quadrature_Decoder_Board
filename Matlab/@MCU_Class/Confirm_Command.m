@@ -11,6 +11,7 @@ function [confirmed] = Confirm_Command(Obj,checkCommand)
     short_warn('Could not confirm recieved command!\n');
     warnString = sprintf('   Expected: %i, Recieved: %i\n',checkCommand, recievedCommand);
     short_warn(warnString);
+    confirmed = false;
   end
 end
 

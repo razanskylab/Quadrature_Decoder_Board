@@ -94,18 +94,24 @@ classdef AbsoluteQuad < MCU_Class
   methods % short methods, which are not worth putting in a file
 
     %*************************************************************************%
-    function [success] = Reset_HCTL_Counter(Obj)
-      Obj.VPrintF_With_ID('Resetting HCTL counter...');
-      Obj.Write_Command(Obj.RESET_HCTL_COUNTER);
-      success = Obj.Wait_Done();
-      Obj.Done();
+    function Reset_HCTL_Counter(Obj)
+      if Obj.isConnected
+        Obj.Flush_Serial();
+        Obj.VPrintF_With_ID('Resetting HCTL counter...');
+        Obj.Write_Command(Obj.RESET_HCTL_COUNTER);
+        Obj.Confirm_Command(Obj.RESET_HCTL_COUNTER);
+        Obj.Confirm_Command(Obj.DONE);
+        Obj.Done();
+      else
+        short_warn('No serial connection established!\n');e
+      end
     end
 
     %*************************************************************************%
     function [steps] = MM_To_Steps(Obj, mm)
 
       if mod(mm, Obj.STEP_SIZE)
-        error('Error in Write_16Bit(): Non integer conversion!');
+        short_warn('MM_To_Steps(): Non integer conversion!');
       end
 
       steps = round(mm ./ Obj.STEP_SIZE); % max rounding error is 200 nm...
@@ -131,8 +137,10 @@ classdef AbsoluteQuad < MCU_Class
 
       if Obj.isConnected
         Obj.Write_Command(Obj.SEND_CURRENT_POS);
-        [~, posCount] = Obj.Wait_Data();
-        posCount = double(posCount);
+        Obj.Confirm_Command(Obj.SEND_CURRENT_POS);
+        Obj.Wait_For_Bytes(2); % wait for uint16
+        posCount = double(Obj.Read_Data(1,'uint16'));
+        Obj.Confirm_Command(Obj.DONE);
       else
         posCount = [];
       end
