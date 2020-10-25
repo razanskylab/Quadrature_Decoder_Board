@@ -21,10 +21,10 @@ namespace mlSerial {
     uint16_t Check_For_New_Command();
     uint16_t Timed_Command_Check();
 
-    uint8_t  Serial_Read_8bit() const;
-    uint16_t Serial_Read_16bit() const;
+    uint8_t  Serial_Read_8bit();
+    uint16_t Serial_Read_16bit();
     uint16_t Serial_Read_16bit(bool doWait);
-    uint32_t Serial_Read_32bit() const;
+    uint32_t Serial_Read_32bit();
     uint32_t Serial_Read_32bit(bool doWait);
 
 
@@ -43,7 +43,7 @@ namespace mlSerial {
     bool Wait_Bytes(const int nBytes, uint32_t waitTimeout);
 
     void Send_Command(const uint16_t command);
-    uint16_t Read_Command() const;
+    uint16_t Read_Command(); 
 
   private:
     WriteBuffer writeBuffer_;

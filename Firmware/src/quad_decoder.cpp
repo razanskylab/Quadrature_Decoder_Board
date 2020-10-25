@@ -76,30 +76,36 @@ void QuadDecoder::Handle_Matlab_Interface(){
       // -----------------------------------------------------------------------
       case SEND_CURRENT_POS:
         Read_HCTL_Counter();
-        MLS.Serial_Write_16bit(posCounter);
-        currentCommand = NO_NEW_COMMAND; // exit state machine
-        break;
-
-      // -----------------------------------------------------------------------
-      case ENABLE_POS_TRIGGER:
-        // pos_based_triggering();
-        MLS.Serial_Write_16bit(DONE); // send the "ok, we are done" command
+        MLS.Send_Command(posCounter);
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
       // -----------------------------------------------------------------------
       case RESET_HCTL_COUNTER:
         Reset_HCTL();
-        MLS.Serial_Write_16bit(DONE); // send the "ok, we are done" command
+        MLS.Send_Command(DONE); // send the "ok, we are done" command
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
       // -----------------------------------------------------------------------
       case CHECK_CONNECTION:
-        MLS.Serial_Write_16bit(READY); // send ready instead of OK here...
+        MLS.Send_Command(READY);
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
+      // -----------------------------------------------------------------------
+      case CHECK_ID:
+        Serial.print(MCU_ID); // write string of serial
+        currentCommand = NO_NEW_COMMAND; // exit state machine
+        break;
+
+      // -----------------------------------------------------------------------
+      case ENABLE_POS_TRIGGER:
+        Pos_Based_Trigger();
+        currentCommand = NO_NEW_COMMAND; // exit state machine
+        break;
+
+      // -----------------------------------------------------------------------
       case START_FREE_RUNNING_TRIGGER:
         Free_Running_Trigger(); // send the "ok, we are done" command
         currentCommand = NO_NEW_COMMAND; // exit state machine
@@ -153,13 +159,23 @@ void QuadDecoder::Read_HCTL_Counter(){
 /******************************************************************************/
 // start free running trigger, formerly known as scope_mode
 void QuadDecoder::Free_Running_Trigger(){
+  // send back START_FREE_RUNNING_TRIGGER to ack what we are doing here
+  MLS.Serial_Write_16bit(START_FREE_RUNNING_TRIGGER);
+  // read settings from matlab
+  bool waitForData = true;
+  uint16_t slowMode = MLS.Serial_Read_16bit(waitForData); // delay in ms or us
+  uint16_t triggerPeriod = MLS.Serial_Read_16bit(waitForData);
+  uint16_t nTrigger = MLS.Serial_Read_16bit(waitForData); // trigger how many times?
+
+  MLS.Serial_Write_16bit(slowMode); // send the "ok, we are stopped" command
+  MLS.Serial_Write_16bit(triggerPeriod); // send the "ok, we are stopped" command
+  MLS.Serial_Write_16bit(nTrigger); // send the "ok, we are stopped" command
+
   uint32_t lastSamplingTime = 0;
-  uint16_t slowMode = MLS.Serial_Read_16bit(); // delay in ms or us
-  uint16_t triggerPeriod = MLS.Serial_Read_16bit();
-  uint16_t nTrigger = MLS.Serial_Read_16bit(); // trigger how many times?
   uint16_t lastCommand = 0;
   triggerCounter[triggerOutCh] = 0; // trigger counter for channel 2
   bool doTrigger = true;
+  // MLS.lastCommandCheck = millis(); // reset our timer...
 
   while (doTrigger){
     // wait for next trigger point, we do this at least once!
@@ -174,7 +190,7 @@ void QuadDecoder::Free_Running_Trigger(){
     Toggle_Trigger_Channel(triggerOutCh); // change trigger signal on trig channel (zero indexed)
 
     // if nTrigger = 0 we trigger indefinately
-    if (nTrigger && (triggerCounter[2] >= nTrigger)){
+    if (nTrigger && (triggerCounter[triggerOutCh] >= nTrigger)){
       doTrigger = false;
     }
 
@@ -183,6 +199,7 @@ void QuadDecoder::Free_Running_Trigger(){
       doTrigger = false; // this will get us out of the while loop
     }
   }
+  MLS.Serial_Write_16bit(STOP); // send the "ok, we are stopped" command
   MLS.Serial_Write_32bit(triggerCounter[triggerOutCh]);
   MLS.Serial_Write_16bit(DONE); // send the "ok, we are done" command
 }
@@ -260,6 +277,7 @@ void QuadDecoder::Pos_Based_Trigger(){
   } // while triggering
 
   // send total trigger count over serial port to matlab
+  MLS.Serial_Write_16bit(STOP); // send the "ok, we are stopped" command
   MLS.Serial_Write_32bit(triggerCounter[triggerOutCh]);
   MLS.Serial_Write_16bit(DONE); // send the "ok, we are done" command
 }

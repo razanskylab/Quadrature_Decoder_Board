@@ -20,29 +20,28 @@ namespace mlSerial {
   // if a command is not read back immediately
   uint16_t MLSerial::Timed_Command_Check()
   {
+    uint16_t newCommand = 0;
     // need to set cmdCheckInterval before calling this fct! default is 1000ms
-    uint16_t currentCommand = 0;
     // check if we got a new serial command 
     if((millis()-lastCommandCheck) >= cmdCheckInterval)
     {
       lastCommandCheck = millis();
-      if (Check_For_New_Command())
-      {
-        currentCommand = Serial_Read_16bit();
-        return currentCommand;
-      }
+      newCommand = Check_For_New_Command();
+      if (newCommand)
+        return newCommand;
+      else
+        return 0; // no new command
     }
-    return currentCommand;
   }
 
   /******************************************************************************/
-  uint8_t MLSerial::Serial_Read_8bit() const {
+  uint8_t MLSerial::Serial_Read_8bit() {
     uint8_t readData = Serial.read();
     return readData; 
   }
 
   /******************************************************************************/
-  uint16_t MLSerial::Serial_Read_16bit() const {
+  uint16_t MLSerial::Serial_Read_16bit() {
     uint16_t readData = (Serial.read() << 0*8) + (Serial.read() << 1*8);
     return readData;  // read a 16-bit number from 2 bytes
   }
@@ -55,7 +54,7 @@ namespace mlSerial {
   }
 
   /******************************************************************************/
-  uint32_t MLSerial::Serial_Read_32bit() const {
+  uint32_t MLSerial::Serial_Read_32bit() {
     uint32_t readData = (Serial.read() << 0*8) + (Serial.read() << 1*8) +
       (Serial.read() << 2*8) + (Serial.read() << 3*8);
     return readData;  // read a 32-bit number from 4 bytes
@@ -140,7 +139,7 @@ namespace mlSerial {
   
   /****************************************************************************/
   // read uint16 command 
-  uint16_t MLSerial::Read_Command() const{
+  uint16_t MLSerial::Read_Command(){
     return Serial_Read_16bit(); // read 2 bytes, aka one uint16 command
   }
 }
