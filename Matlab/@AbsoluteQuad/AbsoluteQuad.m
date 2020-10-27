@@ -6,6 +6,7 @@ classdef AbsoluteQuad < MCU_Class
   properties
     classId = '[Decoder]';
     serialPort char = COM_Ports.AQ;
+    TEENSY_ID = COM_Ports.AQId;
     baudRate = 9600;
 
     samplingFreq(1, 1) {mustBeNumeric, mustBeNonnegative, mustBeFinite} = 100;

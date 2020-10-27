@@ -240,6 +240,9 @@ void QuadDecoder::Pos_Based_Trigger(){
   uint16_t nBScans = 0;  // completed b-scans
   uint8_t triggerOutCh = 0; 
 
+  // always start with low signal on trigger channel
+  digitalWriteFast(TRIG_OUT_PINS[triggerOutCh], LOW);
+  
   triggerCounter[triggerOutCh] = 0; // reset trigger counter
   bool upwardsMoving = true;
   uint16_t nextTriggerPos = lowRange; // next position at which we have to trigger
