@@ -14,5 +14,5 @@ function [success] = Wait_For_Bytes(Obj,nBytes,timeOut)
       return;
     end
   end
-  
+  success = true;
 end

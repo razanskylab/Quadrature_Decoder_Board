@@ -3,8 +3,16 @@
 % Johannes Rebling, (johannesrebling@gmail.com), 2019
 
 function [confirmed] = Confirm_Command(Obj,checkCommand)
-  Obj.Wait_For_Bytes(2); % wait for one uint16 number, our command
-  recievedCommand = Obj.Read_Data(1,"uint16");
+  gotData = Obj.Wait_For_Bytes(2); % wait for one uint16 number, our command
+  
+  if gotData
+    recievedCommand = Obj.Read_Data(1,"uint16");
+  else
+    short_warn('Could not confirm recieved command!\n');
+    confirmed = false;
+    return;
+  end
+
   if (recievedCommand == checkCommand)
     confirmed = true;
   else

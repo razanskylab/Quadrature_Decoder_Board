@@ -6,7 +6,7 @@ void setup() {
   QD.Setup();
 }
 
-FASTRUN void loop() {
+void loop() {
   while(true){ // loop has overhead, while true is faster
     QD.Handle_Matlab_Interface();
   } // while true

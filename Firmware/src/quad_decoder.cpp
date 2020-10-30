@@ -37,6 +37,9 @@ void QuadDecoder::Setup_IO_Pins() const{
   pinMode(TRIG_OUT_PINS[0], OUTPUT);
   pinMode(TRIG_OUT_PINS[1], OUTPUT);
   pinMode(TRIG_OUT_PINS[2], OUTPUT);
+  digitalWriteFast(TRIG_OUT_PINS[0], LOW);
+  digitalWriteFast(TRIG_OUT_PINS[1], LOW);
+  digitalWriteFast(TRIG_OUT_PINS[2], LOW);
 
   pinMode(HCTL_MANUAL_RESET_PIN, INPUT);
   pinMode(TRIG_COUNT_RESET, INPUT);
@@ -152,18 +155,109 @@ void QuadDecoder::Read_HCTL_Counter(){
   digitalWriteFast(HCTL_OE_PIN, LOW); // start read
   // NOTE from SEL high/low to stable, selected data byte = 65 ns
   // we wait ~72 when using overclocked teensy
-  WAIT_24_NS; WAIT_48_NS;
+  // WAIT_24_NS; WAIT_48_NS;
+  WAIT_48_NS; WAIT_48_NS;
   
   // get msb, write directly to counter, also turns uint to int...lots of magic here
   ((unsigned char *)&posCounter)[1] = GPIOD_PDIR & 0xFF; // read msb
   digitalWriteFast(HCTL_SEL_PIN, HIGH); // select low bit
   // NOTE from SEL high/low to stable, selected data byte = 65 ns
   // we wait ~72 when using overclocked teensy
-  WAIT_24_NS; WAIT_48_NS;
+  // WAIT_24_NS; WAIT_48_NS;
+  WAIT_48_NS; WAIT_48_NS;
   ((unsigned char *)&posCounter)[0] = GPIOD_PDIR & 0xFF; // read lsb
   // finish read out
   digitalWriteFast(HCTL_OE_PIN, HIGH);
 }
+
+
+/******************************************************************************/
+// start position based triggering
+FASTRUN void QuadDecoder::Pos_Based_Trigger(){
+  MLS.Serial_Write_16bit(ENABLE_POS_TRIGGER);
+  bool doWait = true;
+  uint16_t lowRange = MLS.Serial_Read_16bit(doWait);
+  uint16_t upRange = MLS.Serial_Read_16bit(doWait);
+  uint16_t stepSize = MLS.Serial_Read_16bit(doWait);  // trigger ever stepSize steps
+  uint16_t nTotalBscans = MLS.Serial_Read_16bit(doWait);  // get nBscans
+  // uint32_t totalScanTime = MLS.Serial_Read_32bit(doWait);  // get total scan time
+
+  // send back data we just read as our kind of handshake
+  MLS.Serial_Write_16bit(lowRange); 
+  MLS.Serial_Write_16bit(upRange); 
+  MLS.Serial_Write_16bit(stepSize); 
+  MLS.Serial_Write_16bit(nTotalBscans); 
+
+  // TODO
+  // send aproximate scan time to check if we got stuck...
+  // TODO
+  // check for serial commands when leaving upper / lower trigger range
+  // at this point we know we have some time before we need to trigger again
+
+  // local variables to keep track of stuff
+  uint16_t nBScans = 0;  // completed b-scans
+  uint8_t triggerOutCh = 0; 
+
+  // always start with low signal on trigger channel
+  digitalWriteFast(TRIG_OUT_PINS[triggerOutCh], LOW);
+  triggerCounter[triggerOutCh] = 0; // reset trigger counter
+  bool upwardsMoving = true;
+  uint16_t nextTriggerPos = lowRange; // next position at which we have to trigger
+  Read_HCTL_Counter();     // update current counter value (stored in posCounter)
+
+  while(nBScans < nTotalBscans)
+  {
+    // we loop here until we leave the upwards moving trigger range ------------
+    while(upwardsMoving){
+      Read_HCTL_Counter();     // update current counter value (stored in posCounter)
+      if (posCounter >= nextTriggerPos){
+        Toggle_Trigger_Channel(triggerOutCh);
+        nextTriggerPos = nextTriggerPos + stepSize; 
+          // use last trigger pos, not current pos so we don't carry delays
+        if (nextTriggerPos > upRange){
+          upwardsMoving = false;
+          nextTriggerPos = upRange;
+          nBScans++; 
+        }
+      }
+    }
+
+    // wait for stage to move to max position and come back --------------------
+    while(posCounter < (upRange + 2*stepSize)){
+      Read_HCTL_Counter();   
+    }
+
+    // we loop here until we leave the downwards moving trigger range ----------
+    while(!upwardsMoving){
+      Read_HCTL_Counter();
+      if (posCounter <= nextTriggerPos){
+        Toggle_Trigger_Channel(triggerOutCh);
+        nextTriggerPos = nextTriggerPos - stepSize;
+        if (nextTriggerPos < lowRange){
+          upwardsMoving = true;
+          nextTriggerPos = lowRange;
+          nBScans++;
+        }
+      }
+    }
+
+    if (nBScans > nTotalBscans){
+      break;
+    }
+    // wait for stage to move to min position and come back --------------------
+    while(posCounter > (lowRange - 2*stepSize)){
+      Read_HCTL_Counter(); 
+    }; 
+  } // while triggering
+
+  digitalWriteFast(TRIG_OUT_PINS[triggerOutCh], LOW);
+
+  // send total trigger count over serial port to matlab
+  MLS.Serial_Write_16bit(STOP); // send the "ok, we are stopped" command
+  MLS.Serial_Write_32bit(triggerCounter[triggerOutCh]);
+  MLS.Serial_Write_16bit(DONE); // send the "ok, we are done" command
+}
+
 
 /******************************************************************************/
 // start free running trigger, formerly known as scope_mode
@@ -208,93 +302,6 @@ void QuadDecoder::Free_Running_Trigger(){
       doTrigger = false; // this will get us out of the while loop
     }
   }
-  MLS.Serial_Write_16bit(STOP); // send the "ok, we are stopped" command
-  MLS.Serial_Write_32bit(triggerCounter[triggerOutCh]);
-  MLS.Serial_Write_16bit(DONE); // send the "ok, we are done" command
-}
-
-/******************************************************************************/
-// start position based triggering
-void QuadDecoder::Pos_Based_Trigger(){
-  MLS.Serial_Write_16bit(ENABLE_POS_TRIGGER);
-  bool doWait = true;
-  uint16_t lowRange = MLS.Serial_Read_16bit(doWait);
-  uint16_t upRange = MLS.Serial_Read_16bit(doWait);
-  uint16_t stepSize = MLS.Serial_Read_16bit(doWait);  // trigger ever stepSize steps
-  uint16_t nTotalBscans = MLS.Serial_Read_16bit(doWait);  // get nBscans
-  // uint32_t totalScanTime = MLS.Serial_Read_32bit(doWait);  // get total scan time
-
-  // send back data we just read as our kind of handshake
-  MLS.Serial_Write_16bit(lowRange); 
-  MLS.Serial_Write_16bit(upRange); 
-  MLS.Serial_Write_16bit(stepSize); 
-  MLS.Serial_Write_16bit(nTotalBscans); 
-
-  // TODO
-  // send aproximate scan time to check if we got stuck...
-  // TODO
-  // check for serial commands when leaving upper / lower trigger range
-  // at this point we know we have some time before we need to trigger again
-
-  // local variables to keep track of stuff
-  uint16_t nBScans = 0;  // completed b-scans
-  uint8_t triggerOutCh = 0; 
-
-  // always start with low signal on trigger channel
-  digitalWriteFast(TRIG_OUT_PINS[triggerOutCh], LOW);
-  
-  triggerCounter[triggerOutCh] = 0; // reset trigger counter
-  bool upwardsMoving = true;
-  uint16_t nextTriggerPos = lowRange; // next position at which we have to trigger
-
-  while(nBScans < nTotalBscans)
-  {
-    Read_HCTL_Counter();     // update current counter value (stored in posCounter)
-    // we loop here until we leave the upwards moving trigger range ------------
-    while(upwardsMoving){
-      Read_HCTL_Counter();     // update current counter value (stored in posCounter)
-      if (posCounter >= nextTriggerPos){
-        Toggle_Trigger_Channel(triggerOutCh);
-        nextTriggerPos = nextTriggerPos + stepSize; 
-          // use last trigger pos, not current pos so we don't carry delays
-      }
-      if (nextTriggerPos > upRange){
-        upwardsMoving = false;
-        nextTriggerPos = upRange;
-        nBScans++; 
-      }
-    }
-
-    // wait for stage to move to max position and come back --------------------
-    if (nBScans < nTotalBscans){
-      while(posCounter < (upRange + 2*stepSize)){
-        Read_HCTL_Counter();   
-      }; 
-    }
-
-    // we loop here until we leave the downwards moving trigger range ----------
-    while(!upwardsMoving){
-      Read_HCTL_Counter();
-      if (posCounter <= nextTriggerPos){
-        Toggle_Trigger_Channel(triggerOutCh);
-        nextTriggerPos = nextTriggerPos - stepSize;
-      }
-      if (nextTriggerPos < lowRange){
-        upwardsMoving = true;
-        nextTriggerPos = lowRange;
-        nBScans++;
-      }
-    }
-
-    // wait for stage to move to min position and come back --------------------
-    if (nBScans < nTotalBscans){
-      while(posCounter > (lowRange - 2*stepSize)){
-        Read_HCTL_Counter(); 
-      }; 
-    }
-  } // while triggering
-
-  // send total trigger count over serial port to matlab
   MLS.Serial_Write_16bit(STOP); // send the "ok, we are stopped" command
   MLS.Serial_Write_32bit(triggerCounter[triggerOutCh]);
   MLS.Serial_Write_16bit(DONE); // send the "ok, we are done" command
