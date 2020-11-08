@@ -1,7 +1,7 @@
 % non functional example class to be used as basis for new hardware interfacing
 % class, as they alls should have similar structure and content
 
-classdef AbsoluteQuad < MCU_Class
+classdef AbsoluteQuad < McuSerialInterface
 
   properties
     classId = '[Decoder]';
