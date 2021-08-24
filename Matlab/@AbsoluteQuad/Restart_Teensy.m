@@ -1,64 +1,36 @@
-% function [] = Update_Code(AQ)
-% does something coole...
-% Johannes Rebling, (johannesrebling@gmail.com), 2019
-
+% AbsoluteQuad
 function [] = Restart_Teensy(Obj)
-  % make sure we can find the teensy software, which handles rebooting etc...
-  % we assume this is located in the platformio packages folder, if this does 
-  % not exist, we just stop here...
-  usrFolder =  getenv('USERPROFILE');
-  teensyFolder = [usrFolder '\.platformio\packages\tool-teensy\'];
-  teensyExe = [teensyFolder 'teensy.exe'];
-  teensyReboot = [teensyFolder 'teensy_reboot.exe'];
-  Obj.VPrintF_With_ID('Checking for teensy toolbox for restart...');
-  teensyFound = exist(teensyExe,'file') == 2;
-  if ~teensyFound
-    error('Can not find teensy.exe, make sure Platformio and teensy platform are installed!');
-  else
-    Obj.PrintF('found!\n');
-  end
-
-  Obj.VPrintF_With_ID('Restarting uC, this takes a few seconds.\n');
+  Obj.VPrintF_With_ID('Restarting teensy MCU, this takes a second...\n');
   if Obj.isConnected
     Obj.Close();
   end
+  % requires tycmd tool located at the following path...
+  % download at https://github.com/Koromix/tytools 
+  cmd1 = sprintf('C:\\Code\\TyTools\\tycmd.exe reset --board=%s',...
+    Obj.TEENSY_ID);
+  fullCmd = sprintf('powershell %s',cmd1);
 
+  [status] = system(fullCmd); % sends restart command
+  pause(0.25); % give matlab a chance to check what is going on, i.e. port is missing
 
-  % cmd1 = sprintf('$port= new-Object System.IO.Ports.SerialPort %s,134,None,8,one',...
-    % Obj.SERIAL_PORT);
-  % cmd2 = '$port.open()';
-  % cmd3 = '$port.Close()';
-  % fullCmd = sprintf('powershell %s; %s; %s',cmd1, cmd2, cmd3);
-  % [status] = system(fullCmd); % sends restart command
-
-  system([teensyExe ' &']); % open teensy exe
-  pause(1); % wait for teensy ext to start
-  rebootStatus = system(teensyReboot); % run reboot
-
-  % pause(0.25); % give matlab a chance to check what is going on, i.e. port is missing
-  Obj.PrintF('  Restart initiated, waiting for teensy to show up\n');
   waitForPort = true;
   while(waitForPort)
     availPorts = serialportlist();
-    if ~isempty(availPorts) && any(contains(availPorts,Obj.SERIAL_PORT))
+    if ~isempty(availPorts) && any(contains(availPorts,Obj.serialPort))
       waitForPort = false;
-      Obj.PrintF('\n');
     else
       waitForPort = true;
-      Obj.PrintF('.');
-      % pause(0.1); % don't run this while loop at full speed
+      pause(0.1); % don't run this while loop at full speed
     end
   end
   Obj.Connect();
 
-  if rebootStatus
-    Obj.PrintF('\n\n');
-    short_warn('  Restart failed:');
+  if status
+    Obj.VPrintF_With_ID('\n\n');
+    short_warn('Restart failed:');
   else
-    Obj.PrintF('  Microcontroller restarted successfully!\n');
-    Obj.PrintF('  You can close the opened windows!\n');
+    Obj.VPrintF_With_ID('Teensy restarted successfully!\n');
+    short_warn('HCTL counter needs to be reset via F.Reset_Pos_Counter();!\n');
   end
 
 end
-
-

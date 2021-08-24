@@ -1,25 +1,33 @@
-% function [] = Disable_Pos_Based_Trigger(AQ)
-% Johannes Rebling, (johannesrebling@gmail.com), 2019
+% read back data once stage AQ has finished it's pos-based triggering
+% force stop of triggering when called with doForce = true;
+% only works if stage is not in trigger range (there we do nothing but trigger)
 
-function [] = Disable_Pos_Based_Trigger(AQ,timeOut)
-  if nargin == 1
-    timeOut = 1; % 5 seconds default timeout
+function [success] = Disable_Pos_Based_Trigger(Obj,doForce)
+  success = false;
+  Obj.VPrintF_With_ID('Disabling position based trigger: ');
+  if nargin<2
+    doForce = false;
   end
 
-  t1 = tic();
-  AQ.VPrintF_With_ID('Disabling position based trigger: ');
-  % AQ.Write_Command(AQ.DISABLE_POS_TRIGGER);
-  % wait for data to come in...
-  while (AQ.bytesAvailable<4)
-    if toc(t1) > timeOut
-      AQ.Verbose_Warn('Teensy response timeout!\n');
-      AQ.lastTrigCount = 0;
-      return;
-    end
+  if doForce
+    Obj.Write_Command(Obj.STOP)
   end
-  [byteData,~] = AQ.Read_Data(4); % get 32 bit trigger counter value
-  AQ.lastTrigCount = double(typecast(byteData,'uint32'));
-  AQ.VPrintF('Triggered %i times!\n',AQ.lastTrigCount);
-  AQ.Wait_Done(); % last thing teensy sends is an OK, we are done
+
+  % read back stop command, uint32 number with trigger count and DONE command
+  conf = Obj.Confirm_Command(Obj.STOP);
+  if ~conf
+    short_warn('MCU not responding!');
+    return;
+  end
+  Obj.Wait_For_Bytes(4); % wait for 32bit number
+  Obj.lastTrigCount = double(Obj.Read_Data(1,'uint32'));
+  Obj.Confirm_Command(Obj.DONE);
+  if ~conf
+    short_warn('MCU not responding!');
+    success = false;
+  else
+    Obj.VPrintF('Triggered %i times!\n',Obj.lastTrigCount);
+    success = true;
+  end
 
 end
