@@ -12,17 +12,17 @@ function [] = Enable_Pos_Based_Trigger(Obj)
 
   Obj.VPrintF_With_ID('Enabling position based trigger:\n');
   Obj.VPrintF('   range: %2.1f<->%2.1f mm (%i<->%i)\n',...
-    Obj.trigRange,lowTrigRangeCnt,highTrigRangeCnt);
+    Obj.trigRange, lowTrigRangeCnt, highTrigRangeCnt);
   Obj.VPrintF('   step size: %1.0f um (steps %i)\n',Obj.trigStepSize,stepCnt);
   Obj.VPrintF('   total B-scans: %i \n',nBScan);
 
   Obj.Write_Command(Obj.ENABLE_POS_TRIGGER);
   % check MCU is actually ready to go, then send over data 
   if Obj.Confirm_Command(Obj.ENABLE_POS_TRIGGER)
-    Obj.Write_Data(lowTrigRangeCnt);
-    Obj.Write_Data(highTrigRangeCnt);
-    Obj.Write_Data(stepCnt);
-    Obj.Write_Data(nBScan);
+    write(Obj.serialPtr, lowTrigRangeCnt, 'uint16');
+    write(Obj.serialPtr, highTrigRangeCnt, 'uint16');
+    write(Obj.serialPtr, stepCnt, 'uint16');
+    write(Obj.serialPtr, nBScan, 'uint16');
     Obj.Confirm_Command(lowTrigRangeCnt);
     Obj.Confirm_Command(highTrigRangeCnt);
     Obj.Confirm_Command(stepCnt);

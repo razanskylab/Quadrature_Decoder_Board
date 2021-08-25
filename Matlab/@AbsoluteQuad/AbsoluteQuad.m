@@ -1,18 +1,19 @@
 % non functional example class to be used as basis for new hardware interfacing
 % class, as they alls should have similar structure and content
 
-classdef AbsoluteQuad < McuSerialInterface
+classdef AbsoluteQuad < handle
 
   properties
-    classId = '[Decoder]';
-    serialPort char = COM_Ports.AQ;
-%     TEENSY_ID = COM_Ports.AQId;
-    baudRate = 9600;
-
+    classId = '[AbsoluteQuad]';
+    serialPort(1, :) char = 'COM11';
+    baudRate(1, 1) = 9600;
     samplingFreq(1, 1) {mustBeNumeric, mustBeNonnegative, mustBeFinite} = 100;
     trigRange(1, 2) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [mm]
     trigStepSize(1, 1) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [um]
     nTotalBScans(1, 1) {mustBeNumeric, mustBeNonnegative, mustBeFinite}; % [um]
+    verboseOutput(1, 1) logical = 1;
+    serialPtr;
+    timeOut(1, 1) single = 1; % timeout for serial communication
   end
 
   % depended properties are calculated from other properties
@@ -26,6 +27,7 @@ classdef AbsoluteQuad < McuSerialInterface
     samplingPeriod(1, 1) uint16 {mustBeInteger, mustBeNonnegative};
     % [us or ms] -> see Enable_Scope_Mode for details on ms vs us
     slowSampling(1, 1); % sets samplingPeriod in us or ms
+    isConnected(1, 1) = 0;
   end
 
   % things we don't want to accidently change but that still might be interesting
@@ -46,44 +48,54 @@ classdef AbsoluteQuad < McuSerialInterface
     CALIB_ARRAY_SIZE = AbsoluteQuad.MAX_BYTE_PER_READ ./ 2; % number of data points in the calibration array
 
     %% Comands defined in teensy_lib.h
-    SEND_CURRENT_POS = uint16(12);
-    RESET_HCTL_COUNTER = uint16(33);
-    ENABLE_POS_TRIGGER = uint16(55);
-    START_FREE_RUNNING_TRIGGER = uint16(66);
+    DO_NOTHING(1, 1) uint16 = 00;
+    SEND_CURRENT_POS(1, 1) uint16 = 12;
+    RESET_HCTL_COUNTER(1, 1) uint16 = 33;
+    ENABLE_POS_TRIGGER(1, 1) uint16 = 55;
+    START_FREE_RUNNING_TRIGGER(1, 1) uint16 = 66;
+    RESTART_MCU(1, 1) uint16 = 91;
+    STOP(1, 1) uint16 = 93;
+    CLOSE_CONNECTION(1, 1) uint16 = 94;
+    CHECK_ID(1, 1) uint16 = 95;
+    CHECK_CONNECTION(1, 1) uint16 = 96;
+    ERROR(1, 1) uint16 = 97;
+    READY(1, 1) uint16 = 98;
+    DONE(1, 1) uint16 = 99;
   end
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % constructor, desctructor, save obj
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods
     % constructor, called when class is created
     function Obj = AbsoluteQuad(varargin)
+
+      % no argument passed --> follow default behaviour
       if nargin < 1
         doConnect = Obj.DO_AUTO_CONNECT;
       end
       
-      if nargin == 1 && ischar(varargin{1})
+      % if a char is passed this means that we got a serial port
+      if (nargin == 1) && (ischar(varargin{1}))
         Obj.serialPort = varargin{1};
-        doConnect = true;
-      elseif nargin == 1 && islogical(varargin{1})
+        doConnect = 1;
+      elseif (nargin == 1) && (any(varargin{1} == [0, 1]))
         doConnect = varargin{1};
+      else
+        error("Invalid argument passed to function");
       end
 
       if doConnect && ~Obj.isConnected
         Obj.Connect();
       elseif ~Obj.isConnected
-        Obj.VPrintF('[Blaster] Initialized but not connected yet.\n');
+        Obj.VPrintF_With_ID('Initialized but not connected yet.\n');
       end
     end
 
-    %*************************************************************************%
     function delete(Obj)
-      if ~isempty(Obj.SerialPortObj)
-        Obj.Close();
+      if ~isempty(Obj.serialPtr)
+        Obj.serialPtr = [];
       end
     end
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % when saved, hand over only properties stored in saveObj
     function SaveObj = saveobj(Obj)
       SaveObj = Obj; % see class def for info
@@ -91,24 +103,8 @@ classdef AbsoluteQuad < McuSerialInterface
 
   end
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods % short methods, which are not worth putting in a file
 
-    %*************************************************************************%
-    function Reset_HCTL_Counter(Obj)
-      if Obj.isConnected
-        Obj.Flush_Serial();
-        Obj.VPrintF_With_ID('Resetting HCTL counter...');
-        Obj.Write_Command(Obj.RESET_HCTL_COUNTER);
-        Obj.Confirm_Command(Obj.RESET_HCTL_COUNTER);
-        Obj.Confirm_Command(Obj.DONE);
-        Obj.Done();
-      else
-        short_warn('No serial connection established!\n');e
-      end
-    end
-
-    %*************************************************************************%
     function [steps] = MM_To_Steps(Obj, mm)
 
       if mod(mm, Obj.STEP_SIZE)
@@ -118,29 +114,29 @@ classdef AbsoluteQuad < McuSerialInterface
       steps = round(mm ./ Obj.STEP_SIZE); % max rounding error is 200 nm...
     end
 
-    %*************************************************************************%
     function [mm] = Steps_To_MM(Obj, steps)
       mm = steps .* Obj.STEP_SIZE;
     end
 
-
   end
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods % set / get methods
-    %*************************************************************************%
+
+    function isConnected = get.isConnected(Obj)
+      isConnected = ~isempty(Obj.serialPtr);
+    end
+
     function [pos] = get.pos(Obj)
       pos = Obj.Steps_To_MM(Obj.posCount);
     end
 
-    %*************************************************************************%
     function [posCount] = get.posCount(Obj)
 
       if Obj.isConnected
-        Obj.Write_Command(Obj.SEND_CURRENT_POS);
-        Obj.Confirm_Command(Obj.SEND_CURRENT_POS);
-        Obj.Wait_For_Bytes(2); % wait for uint16
-        posCount = double(Obj.Read_Data(1,'uint16'));
+        Obj.Write_Command(Obj.SEND_CURRENT_POS); % pushs task over to teensy
+        Obj.Confirm_Command(Obj.SEND_CURRENT_POS); % confirms the received command
+        Obj.Wait_For_Bytes(2); % wait for uint16 which is 2 bytes
+        posCount = double(read(Obj.serialPtr, 1, 'uint16')); 
         Obj.Confirm_Command(Obj.DONE);
       else
         posCount = [];
@@ -148,7 +144,6 @@ classdef AbsoluteQuad < McuSerialInterface
 
     end
 
-    %*************************************************************************%
     function [slowSampling] = get.slowSampling(Obj)
 
       if Obj.samplingFreq > 20
@@ -161,7 +156,6 @@ classdef AbsoluteQuad < McuSerialInterface
 
     end
 
-    %*************************************************************************%
     function [samplingPeriod] = get.samplingPeriod(Obj)
 
       if Obj.slowSampling
@@ -175,14 +169,12 @@ classdef AbsoluteQuad < McuSerialInterface
     end
 
 
-    %*************************************************************************%
     function [nTriggers] = get.nTriggers(Obj)
       distance = Obj.trigRangeCounts(2) - Obj.trigRangeCounts(1);
       nTriggers = distance ./ Obj.trigStepSizeCounts;
       nTriggers = nTriggers + 1;
     end
 
-    %*************************************************************************%
     function [trigRangeCounts] = get.trigRangeCounts(Obj)
       lowTrigRangeCnt = Obj.MM_To_Steps(Obj.trigRange(1));
       highTrigRangeCnt = Obj.MM_To_Steps(Obj.trigRange(2));
@@ -190,7 +182,6 @@ classdef AbsoluteQuad < McuSerialInterface
       trigRangeCounts(2) = highTrigRangeCnt;
     end
 
-    %*************************************************************************%
     function [trigStepSizeCounts] = get.trigStepSizeCounts(Obj)
       trigStepSizeCounts = Obj.MM_To_Steps(Obj.trigStepSize * 1e-3);
     end

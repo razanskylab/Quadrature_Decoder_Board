@@ -8,14 +8,9 @@ function [success] = Wait_Done(AQ,timeOut)
   end
   t1 = tic;
   % wait for ready command...
-  while (AQ.bytesAvailable<2)
-    if toc(t1) > timeOut
-      AQ.Verbose_Warn('Teensy response timeout!\n');
-      return;
-    end
-  end
+  AQ.Wait_For_Bytes(2);
 
-  [~,answer] = AQ.Read_Data();
+  [~, answer] = AQ.Read_Data();
   if answer ~= AQ.DONE
     error('[AQ] Something went wrong in the teensy!');
   else

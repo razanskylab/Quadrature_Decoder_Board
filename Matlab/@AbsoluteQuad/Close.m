@@ -7,7 +7,6 @@ function [] = Close(Obj)
 
   if ~isempty(Obj.serialPtr) && Obj.isConnected
     Obj.VPrintF_With_ID('Closing connection to counter...');
-    closePort(Obj.serialPtr);
     Obj.serialPtr = [];
     Obj.Done();
   else

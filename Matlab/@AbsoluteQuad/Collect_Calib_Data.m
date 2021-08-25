@@ -20,7 +20,8 @@ function [pos,rawPos] = Collect_Calib_Data(AQ)
     cpb.setValue(iWait);
     pause(waitTime);
   end
-  cpb.stop(); fprintf('\n');
+  cpb.stop(); 
+  fprintf('\n');
 
   % make sure data has been recorded
   AQ.Wait_Done(extraTime+2);

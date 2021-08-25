@@ -9,12 +9,12 @@
   // general communication commands -------------------------------------------
   constexpr uint16_t NO_NEW_COMMAND = 00; 
     // reserved as return value for no new command
+  constexpr uint16_t STOP = 93;
   constexpr uint16_t CHECK_ID = 95;
   constexpr uint16_t CHECK_CONNECTION = 96;
   constexpr uint16_t ERROR = 97;
   constexpr uint16_t READY = 98;
   constexpr uint16_t DONE = 99;
-  constexpr uint16_t STOP = 93;
 
   // AQ specific commands
   constexpr uint16_t SEND_CURRENT_POS = 12;

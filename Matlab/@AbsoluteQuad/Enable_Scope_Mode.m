@@ -9,18 +9,38 @@ function [] = Enable_Scope_Mode(AQ,nTrigger)
     nTrigger = 0; % default scope mode, i.e. free running
   end
 
+  slowMode = uint16(AQ.slowSampling);
   triggerPeriod = uint16(AQ.samplingPeriod);
   nTrigger = uint16(nTrigger);
-  slowMode = uint16(AQ.slowSampling);
 
   if (nTrigger == 0)
-    AQ.VPrintF_With_ID('Enabling free-running trigger @ %2.2fkHz.\n',AQ.samplingFreq*1e-3);
+    AQ.VPrintF_With_ID(...
+      'Enabling free-running trigger @ %2.2f kHz.\n', AQ.samplingFreq * 1e-3);
   else
-    AQ.VPrintF_With_ID('Enabling %i trigger @ %2.2fkHz.\n',nTrigger,AQ.samplingFreq*1e-3);
+    AQ.VPrintF_With_ID(...
+      'Enabling %i trigger @ %2.2f kHz.\n', nTrigger, AQ.samplingFreq * 1e-3);
   end
 
-  AQ.Write_Command(AQ.ENABLE_SCOPE_MODE);
-  AQ.Write_16Bit(slowMode);
-  AQ.Write_16Bit(triggerPeriod);
-  AQ.Write_16Bit(nTrigger);
+  AQ.Write_Command(AQ.START_FREE_RUNNING_TRIGGER); % write command to microcontroller
+  AQ.Confirm_Command(AQ.START_FREE_RUNNING_TRIGGER); % wait for handshake
+
+  % push configuration data over to microcontroller 
+  write(AQ.serialPtr, slowMode, 'uint16');
+  write(AQ.serialPtr, triggerPeriod, 'uint16');
+  write(AQ.serialPtr, nTrigger, 'uint16');
+
+  % check that configuration was defined correctly
+  slowModeResponse = read(AQ.serialPtr, 1, 'uint16');
+  triggerPeriodResponse = read(AQ.serialPtr, 1, 'uint16');
+  nTriggerResponse = read(AQ.serialPtr, 1, 'uint16');
+
+  checkArray = ~[...
+    slowMode == slowModeResponse, ...
+    triggerPeriod == triggerPeriodResponse, ...
+    nTrigger == nTriggerResponse];
+
+  if any(checkArray)
+    error("Wrong configuration received from Terensy");
+  end
+
 end

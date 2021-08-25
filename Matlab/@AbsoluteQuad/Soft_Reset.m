@@ -3,6 +3,7 @@
 % or scope mode, we need to return to default state in AQ
 
 function [resetWorked] = Soft_Reset(AQ)
+
   isConnected = AQ.Check_Connection();
 
   if ~isConnected && ~isempty(AQ.serialPtr)

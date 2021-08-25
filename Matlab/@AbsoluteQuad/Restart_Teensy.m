@@ -16,7 +16,7 @@ function [] = Restart_Teensy(Obj)
   waitForPort = true;
   while(waitForPort)
     availPorts = serialportlist();
-    if ~isempty(availPorts) && any(contains(availPorts,Obj.serialPort))
+    if ~isempty(availPorts) && any(contains(availPorts, Obj.serialPort))
       waitForPort = false;
     else
       waitForPort = true;

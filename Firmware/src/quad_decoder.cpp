@@ -24,7 +24,8 @@ void QuadDecoder::Setup(){
 
 /******************************************************************************/
 // setup IO pins 
-void QuadDecoder::Setup_IO_Pins() const{
+void QuadDecoder::Setup_IO_Pins() const
+{
   for (int8_t i=0; i<8; i++)
   {
     pinMode(HCTL_PIN_TABLE[i],INPUT_PULLUP);
@@ -76,39 +77,33 @@ void QuadDecoder::Handle_Matlab_Interface(){
       case NO_NEW_COMMAND:
         break;
 
-      // -----------------------------------------------------------------------
       case SEND_CURRENT_POS:
         Send_Current_Position();
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
-      // -----------------------------------------------------------------------
       case RESET_HCTL_COUNTER:
         Reset_HCTL();
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
-      // -----------------------------------------------------------------------
       case CHECK_CONNECTION:
         MLS.Send_Command(READY);
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
-      // -----------------------------------------------------------------------
       case CHECK_ID:
         Serial.print(MCU_ID); // write string of serial
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
-      // -----------------------------------------------------------------------
       case ENABLE_POS_TRIGGER:
         Pos_Based_Trigger();
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
-      // -----------------------------------------------------------------------
       case START_FREE_RUNNING_TRIGGER:
-        Free_Running_Trigger(); // send the "ok, we are done" command
+        Free_Running_Trigger(); 
         currentCommand = NO_NEW_COMMAND; // exit state machine
         break;
 
@@ -120,37 +115,41 @@ void QuadDecoder::Handle_Matlab_Interface(){
     }
 }
 
-/******************************************************************************/
+
 // reset hctl to reset to zero 
-void QuadDecoder::Reset_HCTL() const{
+void QuadDecoder::Reset_HCTL() const
+{
   MLS.Serial_Write_16bit(RESET_HCTL_COUNTER); // send as confirmation
   digitalWriteFast(HCTL_RST_PIN, LOW); 
   WAIT_96_NS; // min is 28ns but we have no rush here...
   digitalWriteFast(HCTL_RST_PIN, HIGH);
   MLS.Serial_Write_16bit(DONE); // send as confirmation
+  return;
 }
 
-/******************************************************************************/
 // reset hctl to reset to zero 
-void QuadDecoder::Toggle_Trigger_Channel(int8_t channel){
+void QuadDecoder::Toggle_Trigger_Channel(int8_t channel)
+{
   // invert, good old Urs trick ;-)
   trigPinState[channel] = !trigPinState[channel]; 
   digitalWriteFast(TRIG_OUT_PINS[channel], trigPinState[channel]);
   triggerCounter[channel]++; // increment trigger count
+  return;
 }
 
-/******************************************************************************/
 // reset hctl to reset to zero 
-void QuadDecoder::Send_Current_Position(){
+void QuadDecoder::Send_Current_Position()
+{
   MLS.Serial_Write_16bit(SEND_CURRENT_POS); // send as confirmation
   Read_HCTL_Counter();
   MLS.Serial_Write_16bit(posCounter);
   MLS.Serial_Write_16bit(DONE); // send as confirmation
+  return;
 }
 
-/******************************************************************************/
 // get latest counter value from HCTL
-void QuadDecoder::Read_HCTL_Counter(){
+void QuadDecoder::Read_HCTL_Counter()
+{
   digitalWriteFast(HCTL_SEL_PIN, LOW); // select high bit
   digitalWriteFast(HCTL_OE_PIN, LOW); // start read
   // NOTE from SEL high/low to stable, selected data byte = 65 ns
@@ -173,7 +172,8 @@ void QuadDecoder::Read_HCTL_Counter(){
 
 /******************************************************************************/
 // start position based triggering
-FASTRUN void QuadDecoder::Pos_Based_Trigger(){
+FASTRUN void QuadDecoder::Pos_Based_Trigger()
+{
   MLS.Serial_Write_16bit(ENABLE_POS_TRIGGER);
   bool doWait = true;
   uint16_t lowRange = MLS.Serial_Read_16bit(doWait);
@@ -196,25 +196,28 @@ FASTRUN void QuadDecoder::Pos_Based_Trigger(){
 
   // local variables to keep track of stuff
   uint16_t nBScans = 0;  // completed b-scans
-  uint8_t triggerOutCh = 0; 
+  //const uint8_t triggerOutCh = 0; 
 
   // always start with low signal on trigger channel
   digitalWriteFast(TRIG_OUT_PINS[triggerOutCh], LOW);
   triggerCounter[triggerOutCh] = 0; // reset trigger counter
   bool upwardsMoving = true;
   uint16_t nextTriggerPos = lowRange; // next position at which we have to trigger
-  Read_HCTL_Counter();     // update current counter value (stored in posCounter)
+  Read_HCTL_Counter(); // update current counter value (stored in posCounter)
 
   while(nBScans < nTotalBscans)
   {
     // we loop here until we leave the upwards moving trigger range ------------
-    while(upwardsMoving){
+    while(upwardsMoving)
+    {
       Read_HCTL_Counter();     // update current counter value (stored in posCounter)
-      if (posCounter >= nextTriggerPos){
+      if (posCounter >= nextTriggerPos)
+      {
         Toggle_Trigger_Channel(triggerOutCh);
         nextTriggerPos = nextTriggerPos + stepSize; 
           // use last trigger pos, not current pos so we don't carry delays
-        if (nextTriggerPos > upRange){
+        if (nextTriggerPos > upRange)
+        {
           upwardsMoving = false;
           nextTriggerPos = upRange;
           nBScans++; 
@@ -223,7 +226,7 @@ FASTRUN void QuadDecoder::Pos_Based_Trigger(){
     }
 
     // wait for stage to move to max position and come back --------------------
-    while(posCounter < (upRange + 2*stepSize)){
+    while(posCounter < (upRange + 2 * stepSize)){
       Read_HCTL_Counter();   
     }
 
@@ -253,26 +256,30 @@ FASTRUN void QuadDecoder::Pos_Based_Trigger(){
   digitalWriteFast(TRIG_OUT_PINS[triggerOutCh], LOW);
 
   // send total trigger count over serial port to matlab
-  MLS.Serial_Write_16bit(STOP); // send the "ok, we are stopped" command
+  MLS.Serial_Write_16bit(STOP); // send the stop command back as a handshake
   MLS.Serial_Write_32bit(triggerCounter[triggerOutCh]);
   MLS.Serial_Write_16bit(DONE); // send the "ok, we are done" command
+
+  return;
 }
 
 
-/******************************************************************************/
 // start free running trigger, formerly known as scope_mode
-void QuadDecoder::Free_Running_Trigger(){
-  // send back START_FREE_RUNNING_TRIGGER to ack what we are doing here
+void QuadDecoder::Free_Running_Trigger()
+{
+  // send back START_FREE_RUNNING_TRIGGER to confirm what we are doing here
   MLS.Serial_Write_16bit(START_FREE_RUNNING_TRIGGER);
+
   // read settings from matlab
   bool waitForData = true;
   uint16_t slowMode = MLS.Serial_Read_16bit(waitForData); // delay in ms or us
   uint16_t triggerPeriod = MLS.Serial_Read_16bit(waitForData);
   uint16_t nTrigger = MLS.Serial_Read_16bit(waitForData); // trigger how many times?
 
-  MLS.Serial_Write_16bit(slowMode); // send the "ok, we are stopped" command
-  MLS.Serial_Write_16bit(triggerPeriod); // send the "ok, we are stopped" command
-  MLS.Serial_Write_16bit(nTrigger); // send the "ok, we are stopped" command
+  MLS.Serial_Write_16bit(slowMode); // switches between slow and fast version
+  // fast is based on micros command, slow on millis
+  MLS.Serial_Write_16bit(triggerPeriod);
+  MLS.Serial_Write_16bit(nTrigger);
 
   uint32_t lastSamplingTime = 0;
   uint16_t lastCommand = 0;
@@ -282,23 +289,34 @@ void QuadDecoder::Free_Running_Trigger(){
 
   while (doTrigger){
     // wait for next trigger point, we do this at least once!
-    if (slowMode){
-      while((millis()-lastSamplingTime) < triggerPeriod){};
+    if (slowMode)
+    {
+      while((millis() - lastSamplingTime) < triggerPeriod)
+      {
+        // do nothing
+      };
       lastSamplingTime = millis();
     }
-    else{
-      while((micros()-lastSamplingTime) < triggerPeriod){};
+    else
+    {
+      while((micros() - lastSamplingTime) < triggerPeriod)
+      {
+        // do nothing
+      };
       lastSamplingTime = micros();
     }
     Toggle_Trigger_Channel(triggerOutCh); // change trigger signal on trig channel (zero indexed)
 
     // if nTrigger = 0 we trigger indefinately
-    if (nTrigger && (triggerCounter[triggerOutCh] >= nTrigger)){
+    if (nTrigger && (triggerCounter[triggerOutCh] >= nTrigger))
+    {
       doTrigger = false;
     }
 
+    // check if MATLAB through a stop command at us
     lastCommand = MLS.Timed_Command_Check();
-    if (lastCommand == STOP){
+    if (lastCommand == STOP)
+    {
       doTrigger = false; // this will get us out of the while loop
     }
   }

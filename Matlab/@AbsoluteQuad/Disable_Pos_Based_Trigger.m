@@ -5,7 +5,7 @@
 function [success] = Disable_Pos_Based_Trigger(Obj,doForce)
   success = false;
   Obj.VPrintF_With_ID('Disabling position based trigger: ');
-  if nargin<2
+  if nargin < 2
     doForce = false;
   end
 
@@ -20,7 +20,7 @@ function [success] = Disable_Pos_Based_Trigger(Obj,doForce)
     return;
   end
   Obj.Wait_For_Bytes(4); % wait for 32bit number
-  Obj.lastTrigCount = double(Obj.Read_Data(1,'uint32'));
+  Obj.lastTrigCount = read(Obj.serialPtr, 1, 'uint32'); %double(Obj.Read_Data(1,'uint32'));
   Obj.Confirm_Command(Obj.DONE);
   if ~conf
     short_warn('MCU not responding!');

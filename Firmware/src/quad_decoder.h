@@ -16,7 +16,7 @@ namespace quad {
     // public properties
     mlSerial::MLSerial MLS; // custom matlab interface
     uint16_t currentCommand = NO_NEW_COMMAND; 
-    int8_t triggerOutCh = 0; // hardware port that is connected to trigger board
+    int8_t triggerOutCh = 2; // hardware port that is connected to trigger board
 
     /**************************************************************************/
     // public methods
@@ -34,8 +34,8 @@ namespace quad {
     void Setup_IO_Pins() const; // setup IO pins 
     void Reset_HCTL() const; // reset hctl to reset to zero 
     void Read_HCTL_Counter(); // get latest counter value from HCTL
-    void Free_Running_Trigger(); // get latest counter value from HCTL
-    void Pos_Based_Trigger(); // get latest counter value from HCTL
+    void Free_Running_Trigger(); // 
+    void Pos_Based_Trigger(); // 
     void Toggle_Trigger_Channel(int8_t channel);
     void Send_Current_Position(); // read and send current HCTL counter value / pos
   };
