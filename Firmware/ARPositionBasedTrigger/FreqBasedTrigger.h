@@ -10,32 +10,37 @@
 #define FREQ_BASED_TRIGGER_H
 
 #include "Arduino.h"
-#include "PinMapping.h"
+#include "SerialNumbers.h"
 
-const uint32_t maxTriggerFreq = 100000; // maximum allowed trigger freq
+const float maxTriggerFreq = 100000; // maximum allowed trigger freq
 
-class FreqBasedTrigger{
+class FreqBasedTrigger
+{
 
 private:
-	uint32_t trigFreq = 10; // frequency of trigger events [Hz]
+	float trigFreq = 10; // frequency of trigger events [Hz]
 	uint32_t noShots = 0; // number of shots to fire
 	// 0 means until serial interrupt
 	// values > 0 correspond to number of shots
-
-	uint32_t period = 100000; // time between two shots [micros]
+	float period = 100000; // time between two shots [micros]
 	bool oldOutput = 0; // previous state of output line (falling and rising edge)
 	bool flagRunning = 0; // indicates if trigger is running or not
-
+	uint8_t trigPin = 19; // arduino pin on which we do trigger
 public:
 	FreqBasedTrigger();
 	void triggerSignal();
-	void setTrigFreq(const uint32_t& _trigFreq);
-	void setNoShots(const uint32_t& _noShots);
-	void start();
-	void stop();
-	void clear_serial();
-};
+	
+	// set and get function for 
+	void set_trigFreq(const float& _trigFreq);
+	float get_trigFreq() const {return trigFreq;};
 
-extern FreqBasedTrigger FBTx; 
+	void set_noShots(const uint32_t& _noShots);
+	uint32_t get_noShots() const {return noShots;};
+
+	void set_trigPin(const uint8_t& _trigPin);
+	uint8_t get_trigPin() const {return trigPin;};
+
+	void start(); // starts the trigger
+};
 
 #endif	

@@ -7,6 +7,9 @@
 
 function Stop(tc)
 
-	write(tc.S, 'o', "uint8");
+	fprintf("[TeensyCommunicator] Stopping freq based trigger... ");
+	write(tc.S, tc.STOP_FREQ, "uint8");
+	tc.Handshake();
+	fprintf("done!\n");
 
 end

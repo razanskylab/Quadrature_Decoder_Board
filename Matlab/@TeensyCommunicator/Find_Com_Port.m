@@ -19,7 +19,7 @@ function Find_Com_Port(tc)
 				obj.Timeout = 1; % set timeoput in sec
 				fopen(obj); % open port
 				fprintf(obj, 'i'); % request id
-		    pause(0.1);
+		    	pause(0.1);
 				response = fscanf(obj); % read response from device
 				if strcmp(response, 'TeensyBasedTrigger')
 					fprintf('[TeensyCommunicator] Found TeensyBasedTrigger on port %s\n', portArray(iDevice));

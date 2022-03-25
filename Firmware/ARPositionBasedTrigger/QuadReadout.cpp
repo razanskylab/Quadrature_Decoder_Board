@@ -3,8 +3,8 @@
 QuadReadout::QuadReadout(){
 	// define all input pins to get position from counter
 	for (unsigned char i = 0; i < 8; i++)
-    pinMode(pinTable[i], INPUT_PULLUP);
-  
+		pinMode(pinTable[i], INPUT_PULLUP);
+
 	// define reset pin
 	pinMode(HCTL_RST_PIN, OUTPUT);
 	digitalWriteFast(HCTL_RST_PIN, HIGH);
@@ -22,8 +22,8 @@ QuadReadout::QuadReadout(){
 	reset_hctl();
 
 	// PWM clock for HCTL
-  analogWriteFrequency(HCTL_CLOCK_PIN, HCTL_CLOCK_SIGNAL);
-  analogWrite(HCTL_CLOCK_PIN, 128); // set to 50% duty cycle
+	analogWriteFrequency(HCTL_CLOCK_PIN, HCTL_CLOCK_SIGNAL);
+	analogWrite(HCTL_CLOCK_PIN, 128); // set to 50% duty cycle
 
 }
 
@@ -112,9 +112,21 @@ void QuadReadout::startN(bool& lastState){
 	// triggerSignal(lastState);
 }
 
-// define the resolution of the scan pattern in microm
-void QuadReadout::setXResolution(const uint32_t& _resolution){
-	// Check if resolution is within desired range
+
+// define the number of trigger events
+void QuadReadout::set_nTrigger(const uint32_t& _nTrigger){
+	nTrigger = _nTrigger;
+}
+
+void QuadReadout::triggerSignal(bool& lastState){
+	iTrigger++;
+	lastState = !lastState;
+	digitalWriteFast(OUTPUT_POSBOARD, lastState);
+	return;
+}
+
+void QuadReadout::set_resolution(const uint32_t _resolution)
+{
 	if (_resolution < 1){
 		resolution = 1; 
 		// is defined as the minimum resolution
@@ -125,18 +137,14 @@ void QuadReadout::setXResolution(const uint32_t& _resolution){
 	else{
 		resolution = _resolution;
 	}
-	
 	stepSize = resolution * encoderResolution; // convert resolution into counterLimit
+
+	return;
 }
 
-// define the number of trigger events
-void QuadReadout::setNTrigger(const uint32_t& _nTrigger){
-	nTrigger = _nTrigger;
-}
 
-void QuadReadout::triggerSignal(bool& lastState){
-	iTrigger++;
-	lastState = !lastState;
-	digitalWriteFast(OUTPUT_POSBOARD, lastState);
+void QuadReadout::set_trigPin(const uint8_t _trigPin)
+{
+	trigPin = _trigPin;
 	return;
 }
