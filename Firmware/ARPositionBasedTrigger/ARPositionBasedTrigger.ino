@@ -1,5 +1,7 @@
 /* 
 
+	--> put this on the teensy
+	
 	STATUS_LEDS[0] --> waiting for Serial input	
 	STATUS_LEDS[1] --> we are in time domain trigger mode
 	STATUS_LEDS[2] --> we are in position based trigger mode

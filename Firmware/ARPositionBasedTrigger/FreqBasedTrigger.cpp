@@ -45,7 +45,7 @@ void FreqBasedTrigger::set_trigPin(const uint8_t& _trigPin)
 // Start trigger if not running
 void FreqBasedTrigger::start()
 {
-	digitalWriteFast(27, HIGH);
+	digitalWriteFast(27, HIGH); //state of LED1
 
 	// noShots == 0 means we will fire forever, so don't increase the counter
 	flagRunning = 1;
@@ -75,12 +75,12 @@ void FreqBasedTrigger::start()
 		else
 			delay(period / 1000);
 	}
-	digitalWriteFast(27, LOW);
+	digitalWriteFast(27, LOW); //LED Low
 	return;
 }
 
 // Switch polarity of output signal
-void FreqBasedTrigger::triggerSignal()
+void FreqBasedTrigger::triggerSignal()  //Means both rising and falling edges are trigger
 {
 	oldOutput = !oldOutput;
 	digitalWriteFast(trigPin, oldOutput);

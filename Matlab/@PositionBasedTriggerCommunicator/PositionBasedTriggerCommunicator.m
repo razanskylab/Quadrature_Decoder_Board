@@ -5,7 +5,7 @@
 
 % Description: Class interfacing with our position based trigger board.
 
-classdef TeensyCommunicator < handle
+classdef PositionBasedTriggerCommunicator < handle
 
 	properties
 		flagVerbose(1, 1) logical = 0; % turns off all the output
