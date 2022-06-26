@@ -4,6 +4,7 @@
 
 #ifndef QUADREADOUT_H
 #define QUADREADOUT_H
+#define LED_PORT GPIOD_PDOR  //Xiang
 
 class QuadReadout{
 private:

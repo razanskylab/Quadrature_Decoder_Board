@@ -67,7 +67,7 @@ classdef PositionBasedTriggerCommunicator < handle
 
 	methods
 		% Constructor
-		function tc = TeensyCommunicator(varargin)
+		function tc = PositionBasedTriggerCommunicator(varargin)
 			if (nargin == 1)
 				tc.port = varargin{1};
 			elseif (nargin == 0)

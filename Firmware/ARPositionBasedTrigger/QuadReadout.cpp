@@ -1,5 +1,7 @@
 #include "QuadReadout.h"
 
+#define LED_PORT GPIOD_PDOR //Xiang
+
 QuadReadout::QuadReadout(){
 	// define all input pins to get position from counter
 	for (unsigned char i = 0; i < 8; i++)
@@ -47,7 +49,7 @@ void QuadReadout::update_counter()
 	digitalWriteFast(HCTL_SEL_PIN, LOW); // select high bit
 	WAIT_48_NS; WAIT_48_NS; WAIT_48_NS; WAIT_48_NS; // allow high bit to be stable
 
-	((unsigned char *)&posCounter)[1] = GPIOD_PDIR & 0xFF; // read msb
+	//((unsigned char *)&posCounter)[1] = GPIOD_PDIR & 0xFF; // read msb
 
 	digitalWriteFast(HCTL_SEL_PIN, HIGH); // select low bit
 	// get msb, write directly to counter, also turns uint to int...lots of magic here
@@ -56,7 +58,7 @@ void QuadReadout::update_counter()
 
 	// WAIT_24_NS; WAIT_48_NS; // allow high bit to be stable
 	WAIT_48_NS; WAIT_48_NS; WAIT_48_NS; WAIT_48_NS; // allow high bit to be stable
-	((unsigned char *)&posCounter)[0] = GPIOD_PDIR & 0xFF; // read lsb
+	//((unsigned char *)&posCounter)[0] = GPIOD_PDIR & 0xFF; // read lsb
 	// finish read out
 	digitalWriteFast(HCTL_OE_PIN, HIGH);
 	
