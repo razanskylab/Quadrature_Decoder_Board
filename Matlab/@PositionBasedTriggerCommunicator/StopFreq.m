@@ -7,7 +7,7 @@
 
 function Stop(tc)
 
-	fprintf("[TeensyCommunicator] Stopping freq based trigger... ");
+	fprintf("[PositionBasedTrigger] Stopping freq based trigger... ");
 	write(tc.S, tc.STOP_FREQ, "uint8");
 	tc.Handshake();
 	fprintf("done!\n");

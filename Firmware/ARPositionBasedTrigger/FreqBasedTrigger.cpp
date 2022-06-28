@@ -45,7 +45,7 @@ void FreqBasedTrigger::set_trigPin(const uint8_t& _trigPin)
 // Start trigger if not running
 void FreqBasedTrigger::start()
 {
-	digitalWriteFast(27, HIGH); //state of LED1
+	digitalWriteFast(27, HIGH); //state of LED1, Pins 27.28.29.30 is the four LEDs
 
 	// noShots == 0 means we will fire forever, so don't increase the counter
 	flagRunning = 1;

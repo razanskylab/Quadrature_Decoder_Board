@@ -1,7 +1,7 @@
 
 clear all; close all;
 
-T = TeensyCommunicator('COM4');
+T = PositionBasedTriggerCommunicator('COM4');
 
 for i=1:10
 	T.Identify();
@@ -11,10 +11,10 @@ end
 fprintf("Defining different temporal frequencies... ");
 freqsList = single(0.1:10:200);
 for iFreq = 1:length(freqsList)
-	T.triggerFreq = freqsList(iFreq); % has inherent check
+	T.triggerFreq = freqsList(iFreq); % has inherent check, set triggerFreg to Arduino
 
 	% test get frequency
-	setFreq = T.triggerFreq;
+	setFreq = T.triggerFreq; %get TriggerFreq from Arduino
 	if (freqsList(iFreq) ~= setFreq )
 		strMsg = sprintf("Device returned %f instead of %f", ...
 			freqsList(iFreq), setFreq);
@@ -27,7 +27,7 @@ fprintf("done!\n");
 fprintf("Defining different spatial frequencies... ");
 freqsList = uint32(1:10:200);
 for iFreq = 1:length(freqsList)
-	T.triggerSteps = freqsList(iFreq); % has inherent check
+	T.triggerSteps = freqsList(iFreq); % has inherent check, set
 
 	% test get frequency
 	setFreq = T.triggerSteps;
@@ -57,7 +57,7 @@ try
 	% error("Setting this value should not be allows");
 catch ME	
 	if ~strcmp(ME.message, 'Something went wrong while setting the trigger pin')
-		error("This should throw a diofferent error");
+		error("This should throw a different error");
 	end
 end
 
@@ -74,15 +74,15 @@ end
 T.nShots = 100;
 for i = 1:10
 	T.StartFreq();
-end
+end % Start freq trigger (100 shots at 190.10 Hz)... done after 0.53 sec!
 
-T.nShots = 0;
+T.nShots = 0; %set noShots=0 to Arduino, means permanent fire
 tPause = linspace(0.1, 10, 10);
 for i=1:length(tPause)
 	T.StartFreq();
 	pause(tPause(i));
 	T.StopFreq();
-end
+end   %Some problem when showing (0 shots at 190.10 Hz), actually it's many shots
 
 T.Identify();
 

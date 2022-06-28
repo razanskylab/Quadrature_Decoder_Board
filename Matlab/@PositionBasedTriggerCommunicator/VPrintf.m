@@ -9,7 +9,7 @@ function VPrintf(tc, txtMsg, flagName)
 
 	if tc.flagVerbose
 		if flagName
-			txtMsg = ['[TeensyCommunicator] ', txtMsg];
+			txtMsg = ['[PositionBasedTrigger] ', txtMsg];
 		end
 		fprintf(txtMsg);
 	end

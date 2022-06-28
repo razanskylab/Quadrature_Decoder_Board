@@ -8,7 +8,7 @@
 function Identify(tc)
 
 	tStart = tic();
-	fprintf("[TeensyCommunicator] Identifying device... ");
+	fprintf("[PositionBasedTrigger] Identifying device... ");
 
 	write(tc.S, tc.IDENTIFY, "uint8");
 	returnId = read(tc.S, 1, "uint16");

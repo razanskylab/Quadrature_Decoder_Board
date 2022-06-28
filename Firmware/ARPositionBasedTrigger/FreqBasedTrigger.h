@@ -25,7 +25,7 @@ private:
 	float period = 100000; // time between two shots [micros]
 	bool oldOutput = 0; // previous state of output line (falling and rising edge)
 	bool flagRunning = 0; // indicates if trigger is running or not
-	uint8_t trigPin = 19; // arduino pin on which we do trigger
+	uint8_t trigPin = 19; // arduino pin on which we do trigger, which connect to Cascader
 public:
 	FreqBasedTrigger();
 	void triggerSignal();

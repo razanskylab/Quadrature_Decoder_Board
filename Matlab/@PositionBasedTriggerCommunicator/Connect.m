@@ -7,12 +7,12 @@ function Connect(tc)
 
 	tc.VPrintf('Connecting to device... ', 1);
 	tc.S = serialport(tc.port, tc.BAUD_RATE);
-	configureTerminator(tc.S, tc.TERMINATOR);
-	flush(tc.S);
+	% configureTerminator(tc.S, tc.TERMINATOR);
+	% flush(tc.S); %Xiang
 
-	if (~tc.isCorrectDevice)
-		error("Seems to be an incorrect device which we just connected");
-	end
+	% if (~tc.isCorrectDevice)
+	% 	error("Seems to be an incorrect device which we just connected");   //Xiang
+	% end
 	tc.VPrintf('done!\n', 1);
 
 end

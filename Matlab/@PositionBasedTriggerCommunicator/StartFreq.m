@@ -9,9 +9,9 @@
 
 function StartFreq(tc)
 	freq = tc.triggerFreq;
-	nShots = tc.nShots;
+	nShots = tc.nShots;  %get nShots from arduino
 
-	fprintf("[TeensyCommunicator] Start freq trigger (%d shots at %.2f Hz)... ", ...
+	fprintf("[PositionBasedTrigger] Start freq trigger (%d shots at %.2f Hz)... ", ...
 		nShots, freq);
 	tStart = tic();
 

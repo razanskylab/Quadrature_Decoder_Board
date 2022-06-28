@@ -25,7 +25,7 @@ classdef PositionBasedTriggerCommunicator < handle
 		nSteps(1, 1) uint32; % number of steps during scan
 		triggerFreq(1, 1) single {mustBeNonnegative}; % [Hz]
 		triggerSteps(1, 1) uint32; % [microm]
-		trigPin(1, 1) uint8; % sma pin we use (1 ... 3) corresponds to (0 ... 2) here
+		trigPin(1, 1) uint8; % sma pin we use (1 2 3) corresponds to (0 1 2) here
 		isCorrectDevice(1, 1) logical;
 		positionCounter(1, 1) uint16;
 		position(1, 1) double; % [mm]
@@ -35,20 +35,20 @@ classdef PositionBasedTriggerCommunicator < handle
 	properties(Hidden, Constant)
 		encoderResolution(1, 1) double = 2; % steps per microm
 		BAUD_RATE(1, 1) double = 115200;
-		TERMINATOR(1, :) char = 'CR';
+		TERMINATOR(1, :) char = 'CR';  % ? Xiang
 
 		IDENTIFY(1, 1) uint8 = 00;
 		IDENTIFIER(1, 1) uint16 = 76; % unique device for AZbsoluteQuad teensy
 
 		SET_FREQ(1, 1) uint8 = 11;
 		SET_SPACE(1, 1) uint8 = 12;
-		SET_NFREQ(1, 1) uint8 = 13;
+		SET_NFREQ(1, 1) uint8 = 13;  
 		SET_NSPACE(1, 1) uint8 = 14;
 		SET_PIN(1, 1) uint8 = 15;
 
 		GET_FREQ(1, 1) uint8 = 21; % returns frequency of temporal trigger
 		GET_SPACE(1, 1) uint8 = 22; % retruns frequency of spatial domain trigger
-		GET_NFREQ(1, 1) uint8 = 23;
+		GET_NFREQ(1, 1) uint8 = 23; % return Number of shots in Frequence mode
 		GET_NSPACE(1, 1) uint8 = 24; 
 		GET_PIN(1, 1) uint8 = 25;
 
@@ -101,9 +101,9 @@ classdef PositionBasedTriggerCommunicator < handle
 		VPrintf(tc, txtMsg, flagName);
 
 		function isCorrectDevice = get.isCorrectDevice(tc)
-			write(tc.S, 'i', "uint8");
+			write(tc.S, tc.IDENTIFY, "uint8");  %Xiang
 			response = readline(tc.S);
-			isCorrectDevice = strcmp(response, "TeensyBasedTrigger");
+			isCorrectDevice = strcmp(response, tc.IDENTIFIER);
 		end
 
 		function positionCounter = get.positionCounter(tc)
@@ -179,7 +179,7 @@ classdef PositionBasedTriggerCommunicator < handle
 
 		% number of triggers during frequency based trigger
 		function set.nShots(tc, nShots)
-			write(tc.S, tc.SET_NFREQ, "uint8");
+			write(tc.S, tc.SET_NFREQ, "uint8");  % set Number of shots in Frequence mode
 			write(tc.S, uint32(nShots), "uint32");
 			returnVal = read(tc.S, 1, "uint32");
 			if (returnVal ~= nShots)

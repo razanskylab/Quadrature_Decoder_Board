@@ -13,7 +13,7 @@
 */
 #include "TriggerBoard.h"
 
-TriggerBoard instance;
+TriggerBoard instance; //instance is an object of class TriggerBoard
 
 // setting up board
 void setup()

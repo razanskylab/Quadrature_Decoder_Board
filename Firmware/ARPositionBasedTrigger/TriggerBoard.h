@@ -16,11 +16,11 @@
 class TriggerBoard
 {
 private:
-	FreqBasedTrigger freqTrigger;
+	FreqBasedTrigger freqTrigger;    //define two objects to the two classes
 	QuadReadout posTrigger;
 
 	// pin definitions
-	const unsigned char TRIG_PINS[3] = {15, 18, 19}; // former TRIG_PINS 
+	const unsigned char TRIG_PINS[3] = {15, 18, 19}; // former TRIG_PINS, We use 19 connect to triggerPin 3. 
 	const unsigned char STATUS_LEDS[4] = {27, 28, 29, 30};
 	const unsigned char HCTL_CLOCK_PIN = 10;
 	const unsigned char HCTL_RST_PIN = 11;
