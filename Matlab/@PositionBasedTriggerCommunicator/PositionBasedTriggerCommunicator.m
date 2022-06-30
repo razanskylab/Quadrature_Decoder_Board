@@ -76,7 +76,6 @@ classdef PositionBasedTriggerCommunicator < handle
 			else
 				error("Invalid number of input arguments");
 			end
-
 			tc.Connect();
 		end
 

@@ -13,6 +13,7 @@ function Connect(tc)
 	% if (~tc.isCorrectDevice)
 	% 	error("Seems to be an incorrect device which we just connected");   //Xiang
 	% end
+	%tc.isConnected = 1;
 	tc.VPrintf('done!\n', 1);
 
 end

@@ -118,9 +118,9 @@ void TriggerBoard::operate()
 	}
 	else if (command == SET_NFREQ)
 	{
-		const uint32_t nFreq = SerialNumbers::read_uint32();
-		SerialNumbers::send_uint32(nFreq);
-		freqTrigger.set_noShots(nFreq);
+		const uint32_t nFreq = SerialNumbers::read_uint32(); //save nShots to nFreq 
+		SerialNumbers::send_uint32(nFreq); //return to matlab and check
+		freqTrigger.set_noShots(nFreq); //set numbers of shots
 		SerialNumbers::send_uint8(OK);
 	}
 	else if (command == GET_NFREQ)
